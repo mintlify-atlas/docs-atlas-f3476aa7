@@ -1,0 +1,149 @@
+---
+title: Scripts
+description: Overview of all scripts in the .devcontainer directory
+---
+
+## Script overview
+
+The `.devcontainer/` directory contains three main scripts that automate the setup and verification of the TurtleBot3 development environment.
+
+## Scripts
+
+### post-create.sh
+
+**Purpose**: One-time initialization when the container is first created
+
+**When it runs**: Automatically executed by `postCreateCommand` in devcontainer.json
+
+**What it does**:
+- Detects GPU capabilities (hardware vs software rendering)
+- Configures user's `.bashrc` with ROS2 environment
+- Sets up environment variables
+- Creates useful bash aliases
+- Clones TurtleBot3 repositories from GitHub
+- Initializes and updates rosdep
+- Installs package dependencies
+- Creates maps directory
+- Generates GPU information file
+
+**Key features**:
+- Intelligent GPU detection with software rendering fallback
+- Idempotent repository cloning (won't re-clone if content exists)
+- Verifies package integrity by counting package.xml files
+
+**Location**: `.devcontainer/post-create.sh`
+
+**Documentation**: See [post-create.sh](/reference/post-create)
+
+### post-start.sh
+
+**Purpose**: Build workspace and verify readiness on every container start
+
+**When it runs**: Automatically executed by `postStartCommand` in devcontainer.json
+
+**What it does**:
+- Sources ROS2 Jazzy environment
+- Verifies packages exist in src/ directory
+- Checks if workspace is already built
+- Builds workspace with colcon if needed
+- Displays quick start instructions
+
+**Key features**:
+- Skips build if workspace is already built and functional
+- Handles Windows mount compatibility issues
+- Provides immediate feedback on container readiness
+- Shows TurtleBot3 package list after successful build
+
+**Build configuration**:
+```bash
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
+
+**Location**: `.devcontainer/post-start.sh`
+
+**Documentation**: See [post-start.sh](/reference/post-start)
+
+### verify-setup.sh
+
+**Purpose**: Comprehensive setup verification and diagnostics
+
+**When it runs**: Manually by the user when needed
+
+**Usage**:
+```bash
+bash /workspace/turtlebot3_ws/.devcontainer/verify-setup.sh
+```
+
+**What it checks**:
+1. **System checks**: ROS2, Gazebo, Python, colcon
+2. **Package checks**: TurtleBot3, Navigation2, Cartographer
+3. **Environment variables**: ROS_DISTRO, TURTLEBOT3_MODEL, GZ_VERSION
+4. **Directory structure**: Workspace, source, and build directories
+5. **Build status**: Build and install directories
+
+**Output**:
+- Color-coded test results (green = pass, red = fail, yellow = warning)
+- Pass/fail summary
+- Quick start instructions if all tests pass
+- Troubleshooting guidance if tests fail
+
+**Location**: `.devcontainer/verify-setup.sh`
+
+**Documentation**: See [verify-setup.sh](/reference/verify-setup)
+
+## Script execution order
+
+1. **Container creation**: `post-create.sh` runs once
+   - Sets up environment
+   - Clones repositories
+   - Installs dependencies
+
+2. **Container start**: `post-start.sh` runs every time
+   - Builds workspace (if needed)
+   - Verifies readiness
+
+3. **Manual verification**: `verify-setup.sh` runs on-demand
+   - Diagnoses issues
+   - Confirms setup
+
+## Common workflows
+
+### First time setup
+```bash
+# Automatic: post-create.sh runs
+# Automatic: post-start.sh runs
+# Manual verification (optional):
+bash .devcontainer/verify-setup.sh
+```
+
+### Container restart
+```bash
+# Automatic: post-start.sh runs
+# Checks if already built, skips build if yes
+```
+
+### Troubleshooting
+```bash
+# Run verification script
+bash .devcontainer/verify-setup.sh
+
+# If issues found, rebuild workspace
+cb  # alias for: cd /workspace/turtlebot3_ws && colcon build --symlink-install
+```
+
+## Exit codes
+
+| Script | Success | Failure |
+|--------|---------|----------|
+| post-create.sh | 0 | Non-zero |
+| post-start.sh | 0 | 1 (no packages or build failed) |
+| verify-setup.sh | 0 | Always 0 (shows results in output) |
+
+## Error handling
+
+All scripts use:
+```bash
+set -e  # Exit on error
+```
+
+This ensures that any command failure stops execution and reports the error.

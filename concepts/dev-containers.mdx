@@ -1,0 +1,390 @@
+---
+title: Dev containers
+description: How VS Code Dev Containers work and enable seamless containerized development
+---
+
+VS Code Dev Containers transform Docker containers into full-featured development environments. This technology allows you to code, debug, and run commands inside a container as if you were working locally.
+
+## What are dev containers?
+
+Dev Containers are a VS Code feature that lets you use a Docker container as a complete development environment. All your development tools, dependencies, and runtime are packaged inside the container, while VS Code on your host machine provides the interface.
+
+### Why use dev containers?
+
+**Consistency**: Everyone on your team gets the exact same development environment, regardless of their host operating system (Windows, macOS, or Linux).
+
+**Isolation**: The container doesn't affect your host system. Install whatever you need inside the container without worrying about conflicts with other projects or system libraries.
+
+**Portability**: The entire environment is defined in code (Dockerfile and devcontainer.json). Share these files, and anyone can recreate your exact setup.
+
+**Clean removal**: Delete the container when you're done - your host system remains unchanged. No leftover libraries, configurations, or dependencies.
+
+**Version control**: Environment configuration is tracked alongside your code, ensuring reproducibility across time and teams.
+
+<Info>
+Dev Containers solve the classic "it works on my machine" problem by ensuring everyone works in identical environments.
+</Info>
+
+## How dev containers work
+
+### Architecture overview
+
+When you open a project in a dev container, VS Code operates in a client-server architecture:
+
+1. **VS Code UI** runs on your host machine (Windows/macOS/Linux)
+2. **VS Code Server** runs inside the Docker container
+3. The UI communicates with the server over a connection bridge
+4. All development operations (editing, terminal, debugging) execute in the container
+5. Your source code is accessible in both environments via bind mounts
+
+### Connection flow
+
+```
+Host Machine                     Docker Container
+┌─────────────────┐             ┌──────────────────────┐
+│  VS Code UI     │◄────────────►│  VS Code Server      │
+│  (Your screen)  │   Bridge     │  (Development tools) │
+└─────────────────┘             └──────────────────────┘
+        │                                  │
+        │                                  │
+        ▼                                  ▼
+┌─────────────────┐             ┌──────────────────────┐
+│  Workspace      │◄────────────►│  /workspace/         │
+│  (Bind mount)   │   Shared     │  (Container mount)   │
+└─────────────────┘             └──────────────────────┘
+```
+
+### What happens when you open a dev container
+
+1. **Detection**: VS Code finds `.devcontainer/devcontainer.json` in your workspace
+2. **Image build**: Docker builds the image from `.devcontainer/Dockerfile` (first time only)
+3. **Container creation**: Docker creates a container from the image
+4. **Volume mounting**: Your workspace folder is mounted into the container
+5. **Server installation**: VS Code Server is installed inside the container
+6. **Extension installation**: Configured extensions are installed in the container
+7. **Post-create hook**: `postCreateCommand` runs to set up the environment
+8. **Connection**: VS Code UI connects to the container server
+9. **Ready**: You can now develop inside the container
+
+## TurtleBot3 dev container configuration
+
+### File structure
+
+The dev container is configured through files in the `.devcontainer/` directory:
+
+```
+.devcontainer/
+├── Dockerfile           # Container image definition
+├── devcontainer.json    # VS Code configuration
+├── post-create.sh       # Initial setup script
+└── post-start.sh        # Startup build script
+```
+
+### Dockerfile
+
+Defines the container image with all necessary software.
+
+**Base image**:
+```dockerfile
+FROM osrf/ros:jazzy-desktop-full-noble
+```
+
+This official OSRF image includes:
+- Ubuntu 24.04 Noble
+- ROS2 Jazzy desktop-full installation
+- Essential development tools
+
+**Key installations**:
+- Gazebo Harmonic simulator
+- Navigation2 and Cartographer (SLAM)
+- ROS-Gazebo bridge
+- OpenGL and Mesa utilities for GPU
+- Python dependencies (numpy, transforms3d)
+- Development tools (git, vim, colcon, vcstool)
+
+**Workspace setup**:
+```dockerfile
+RUN mkdir -p /workspace/turtlebot3_ws/src
+WORKDIR /workspace/turtlebot3_ws
+```
+
+<Note>
+The Dockerfile is only executed during image build. Subsequent container starts reuse the built image.
+</Note>
+
+### devcontainer.json
+
+Configures how VS Code integrates with the container.
+
+**Build configuration**:
+```json
+"build": {
+  "dockerfile": "Dockerfile",
+  "context": ".."
+}
+```
+
+**Workspace mounting**:
+```json
+"workspaceFolder": "/workspace/turtlebot3_ws",
+"workspaceMount": "source=${localWorkspaceFolder},target=/workspace/turtlebot3_ws,type=bind"
+```
+
+This creates a bind mount, meaning files are shared between host and container. Changes in either location are immediately reflected in the other.
+
+**VS Code extensions**:
+```json
+"extensions": [
+  "ms-python.python",
+  "ms-vscode.cpptools",
+  "ms-vscode.cmake-tools",
+  "twxs.cmake",
+  "ms-iot.vscode-ros"
+]
+```
+
+These extensions are automatically installed inside the container, providing language support and debugging capabilities.
+
+**Environment variables**:
+```json
+"remoteEnv": {
+  "DISPLAY": ":1",
+  "ROS_DOMAIN_ID": "30",
+  "TURTLEBOT3_MODEL": "burger",
+  "RMW_IMPLEMENTATION": "rmw_cyclonedds_cpp",
+  "GZ_VERSION": "harmonic",
+  "QT_QPA_PLATFORM": "xcb"
+}
+```
+
+**Container runtime options**:
+```json
+"runArgs": [
+  "--network=host",
+  "--privileged",
+  "--shm-size=2gb",
+  "--device=/dev/dri:/dev/dri"
+]
+```
+
+- `--network=host`: Container shares host network stack (simplifies ROS2 networking)
+- `--privileged`: Required for GPU access
+- `--shm-size=2gb`: Shared memory for ROS2 message passing
+- `--device=/dev/dri`: GPU device for hardware acceleration
+
+**Port forwarding**:
+```json
+"forwardPorts": [6080, 5901],
+"portsAttributes": {
+  "6080": {
+    "label": "Desktop (noVNC)",
+    "onAutoForward": "openBrowser"
+  }
+}
+```
+
+Port 6080 is automatically forwarded and opens in your browser for noVNC access.
+
+### Desktop-lite feature
+
+The dev container uses the `desktop-lite` feature to provide a graphical desktop environment:
+
+```json
+"features": {
+  "ghcr.io/devcontainers/features/desktop-lite:1": {
+    "password": "ros",
+    "webPort": "6080",
+    "vncPort": "5901"
+  }
+}
+```
+
+This feature automatically installs:
+- Xfce desktop environment
+- TigerVNC server
+- noVNC web client
+- Supervisor for process management
+
+<Tip>
+The desktop-lite feature is specifically designed for dev containers and requires minimal configuration.
+</Tip>
+
+## Lifecycle hooks
+
+Dev containers support lifecycle scripts that run at specific times.
+
+### postCreateCommand
+
+Runs **once** when the container is first created.
+
+```json
+"postCreateCommand": "bash /workspace/turtlebot3_ws/.devcontainer/post-create.sh"
+```
+
+The `post-create.sh` script:
+1. Detects GPU capabilities and configures rendering
+2. Sets up `.bashrc` with ROS2 environment sourcing
+3. Adds useful aliases (`tb3_empty`, `tb3_teleop`, etc.)
+4. Clones TurtleBot3 repositories from GitHub
+5. Installs package dependencies with `rosdep`
+6. Creates the `~/maps` directory for saved maps
+
+### postStartCommand
+
+Runs **every time** the container starts.
+
+```json
+"postStartCommand": "bash /workspace/turtlebot3_ws/.devcontainer/post-start.sh"
+```
+
+The `post-start.sh` script:
+1. Verifies TurtleBot3 packages exist
+2. Builds the workspace with `colcon build`
+3. Sources the install environment
+4. Displays quick start instructions
+
+<Info>
+The distinction between post-create and post-start ensures heavy operations (cloning, dependency installation) only happen once, while the build happens on every start to catch any changes.
+</Info>
+
+## Working inside the dev container
+
+### Terminal sessions
+
+When you open a terminal in VS Code, it automatically runs inside the container. All commands execute in the container environment with access to ROS2, Gazebo, and all installed tools.
+
+**Automatic environment setup**:
+The `.bashrc` configured by `post-create.sh` automatically sources:
+```bash
+source /opt/ros/jazzy/setup.bash
+source /workspace/turtlebot3_ws/install/setup.bash
+```
+
+Every new terminal has the ROS2 environment ready to use.
+
+### File editing
+
+Files in the workspace are accessible from both host and container:
+
+- Edit files in VS Code on your host
+- Changes immediately appear in the container
+- Build and run commands in the container terminal
+- Results are visible in both locations
+
+**What's persisted**:
+- All files in the workspace directory
+- Custom packages in `src/`
+- Configuration files
+- Maps saved to workspace
+
+**What's ephemeral**:
+- The container itself
+- Installed apt packages (defined in Dockerfile)
+- Files outside the workspace mount
+- Build artifacts in `build/`, `install/`, `log/`
+
+### Debugging
+
+VS Code's debugging features work seamlessly:
+
+- Set breakpoints in Python or C++ code
+- Debugger runs inside the container
+- Access to all ROS2 topics and services
+- Full symbol resolution and variable inspection
+
+## Customizing the dev container
+
+### Adding software packages
+
+**Persistent (recommended)**: Edit `Dockerfile`
+```dockerfile
+RUN apt-get install -y ros-jazzy-my-package
+```
+Then rebuild: F1 → "Dev Containers: Rebuild Container"
+
+**Temporary (testing)**: Install in running container
+```bash
+sudo apt-get update
+sudo apt-get install -y ros-jazzy-my-package
+```
+Lost when container is deleted.
+
+### Changing environment variables
+
+Edit `devcontainer.json`:
+```json
+"remoteEnv": {
+  "TURTLEBOT3_MODEL": "waffle"
+}
+```
+Rebuild container for changes to take effect.
+
+### Adding VS Code extensions
+
+Edit `devcontainer.json`:
+```json
+"extensions": [
+  "ms-python.python",
+  "your-extension-id"
+]
+```
+Extensions install automatically on next container creation.
+
+### Modifying initialization
+
+Edit `post-create.sh` or `post-start.sh` to add custom setup steps:
+```bash
+# Add custom aliases
+echo "alias mycommand='ros2 launch my_package my_launch.py'" >> ~/.bashrc
+
+# Clone additional repositories
+git clone https://github.com/user/my-ros-package.git
+```
+
+## Rebuilding the container
+
+After modifying configuration files, rebuild the container:
+
+**Full rebuild** (recommended after Dockerfile changes):
+- F1 → "Dev Containers: Rebuild Container"
+- Rebuilds image and creates new container
+- Runs post-create and post-start scripts
+
+**Rebuild without cache** (for troubleshooting):
+- F1 → "Dev Containers: Rebuild Container Without Cache"
+- Forces Docker to rebuild all layers
+- Takes longer but ensures clean state
+
+<Warning>
+Rebuilding the container deletes build artifacts (`build/`, `install/`, `log/`) but preserves your source code in `src/` because it's in the mounted workspace.
+</Warning>
+
+## Platform-specific considerations
+
+### Windows
+
+- Use WSL 2 backend for best performance
+- File I/O can be slower than Linux
+- GPU support requires recent Docker Desktop and WSL 2
+
+### macOS
+
+- No native GPU passthrough (uses software rendering)
+- File sharing can have performance overhead
+- Use VirtioFS for improved file system performance
+
+### Linux
+
+- Best performance (native Docker)
+- Direct GPU access available
+- No additional layers between container and hardware
+
+## Benefits for ROS2 development
+
+Dev containers are particularly valuable for ROS2 projects:
+
+1. **Complex dependencies**: ROS2, Gazebo, Navigation2, and Cartographer are pre-installed and configured
+2. **Environment isolation**: Multiple ROS projects can use different ROS distros without conflicts
+3. **Team consistency**: Everyone uses the same ROS2 version, packages, and configurations
+4. **CI/CD integration**: Same container can be used in automated testing pipelines
+5. **Learning friendly**: New developers get a working environment in minutes, not hours

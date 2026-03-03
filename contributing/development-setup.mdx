@@ -1,0 +1,353 @@
+---
+title: Development setup
+description: Setting up your environment to contribute to the project
+---
+
+Learn how to set up a development environment for contributing to the TurtleBot3 ROS2 Jazzy dev container project.
+
+## Prerequisites
+
+Before you begin, ensure you have:
+
+<CardGroup cols={2}>
+  <Card title="Docker" icon="docker">
+    Docker Desktop (Windows/macOS) or Docker Engine (Linux)
+  </Card>
+  
+  <Card title="VS Code" icon="code">
+    Visual Studio Code with Dev Containers extension
+  </Card>
+  
+  <Card title="Git" icon="git">
+    Git version control system
+  </Card>
+  
+  <Card title="GitHub account" icon="github">
+    For forking and submitting pull requests
+  </Card>
+</CardGroup>
+
+## System requirements
+
+### Minimum specifications
+
+- **CPU**: 4 cores
+- **RAM**: 8 GB
+- **Disk**: 20 GB free space
+- **OS**: Windows 10/11, macOS 10.15+, or modern Linux distribution
+
+### Recommended specifications
+
+- **CPU**: 6+ cores
+- **RAM**: 16 GB
+- **Disk**: 50 GB free space
+- **GPU**: For hardware-accelerated Gazebo rendering
+
+<Info>
+  Development work, especially testing Gazebo simulations, benefits significantly from additional CPU and RAM resources.
+</Info>
+
+## Initial setup
+
+### 1. Fork and clone the repository
+
+<Steps>
+  <Step title="Fork on GitHub">
+    Navigate to the [repository](https://github.com/prakash-aryan/turtlebot3_jazzy_devcontainer) and click "Fork"
+  </Step>
+  
+  <Step title="Clone your fork">
+    ```bash
+    git clone https://github.com/YOUR-USERNAME/turtlebot3_jazzy_devcontainer.git
+    cd turtlebot3_jazzy_devcontainer
+    ```
+  </Step>
+  
+  <Step title="Add upstream remote">
+    ```bash
+    git remote add upstream https://github.com/prakash-aryan/turtlebot3_jazzy_devcontainer.git
+    git fetch upstream
+    ```
+  </Step>
+</Steps>
+
+### 2. Configure Docker resources
+
+Allocate sufficient resources for development:
+
+**Docker Desktop (Windows/macOS)**:
+1. Open Docker Desktop
+2. Settings → Resources
+3. Adjust:
+   - **CPUs**: 4-6 cores
+   - **Memory**: 8-16 GB
+   - **Disk**: 50 GB
+4. Apply & Restart
+
+**Linux**:
+Resources are not limited by default. Ensure your system has adequate resources available.
+
+### 3. Open in VS Code
+
+```bash
+code .
+```
+
+VS Code will detect the dev container configuration.
+
+### 4. Build the dev container
+
+<Steps>
+  <Step title="Open in container">
+    - Click "Reopen in Container" when prompted
+    - Or press `F1` → "Dev Containers: Reopen in Container"
+  </Step>
+  
+  <Step title="Wait for build">
+    First build takes 10-15 minutes:
+    - Downloads base Ubuntu 24.04 image (~1GB)
+    - Installs ROS2 Jazzy packages (~2GB)
+    - Installs Gazebo Harmonic (~500MB)
+    - Clones TurtleBot3 repositories
+    - Builds ROS2 workspace
+  </Step>
+  
+  <Step title="Verify setup">
+    ```bash
+    bash verify-setup.sh
+    ```
+    You should see green checkmarks for all tests
+  </Step>
+</Steps>
+
+## Development workflow
+
+### Making changes
+
+<Steps>
+  <Step title="Create a feature branch">
+    ```bash
+    git checkout -b feature/your-feature-name
+    ```
+    Use descriptive names:
+    - `feature/add-slam-toolbox`
+    - `fix/vnc-connection`
+    - `docs/update-readme`
+  </Step>
+  
+  <Step title="Make your changes">
+    Edit files in the project:
+    - `.devcontainer/Dockerfile` for container image changes
+    - `.devcontainer/devcontainer.json` for VS Code configuration
+    - `.devcontainer/post-create.sh` for setup scripts
+    - `README.md` for documentation
+  </Step>
+  
+  <Step title="Test in the container">
+    Verify changes work correctly:
+    - Rebuild container: `F1` → "Dev Containers: Rebuild Container"
+    - Test launch aliases (`tb3_empty`, `tb3_slam`, etc.)
+    - Verify Gazebo and ROS2 functionality
+  </Step>
+</Steps>
+
+### Testing changes
+
+#### Rebuild the container
+
+After modifying dev container files:
+
+```bash
+# Press F1 in VS Code, then:
+# "Dev Containers: Rebuild Container"
+# or
+# "Dev Containers: Rebuild Container Without Cache" (for clean build)
+```
+
+#### Verify ROS2 workspace
+
+Test that packages build correctly:
+
+```bash
+cd /workspace/turtlebot3_ws
+rm -rf build install log
+colcon build --symlink-install
+source install/setup.bash
+```
+
+#### Test simulations
+
+<Info>
+  Always test all launch aliases to ensure nothing breaks.
+</Info>
+
+```bash
+# Test each alias in separate terminals:
+tb3_empty    # Empty world
+tb3_world    # TurtleBot3 world
+tb3_house    # House environment
+tb3_teleop   # Keyboard control
+tb3_slam     # SLAM mapping
+tb3_nav      # Navigation2
+```
+
+#### Check VNC access
+
+Verify browser-based GUI:
+
+1. Open http://localhost:6080
+2. Enter password: `ros`
+3. Confirm desktop and Gazebo display correctly
+
+### Committing changes
+
+Write clear, descriptive commit messages:
+
+```bash
+git add .
+git commit -m "Brief description of changes
+
+Detailed explanation of what changed and why:
+- Bullet point 1
+- Bullet point 2
+- Reference to issue #123 if applicable"
+```
+
+### Syncing with upstream
+
+Keep your fork up to date:
+
+```bash
+# Fetch latest changes from upstream
+git fetch upstream
+
+# Merge into your local main branch
+git checkout main
+git merge upstream/main
+
+# Push to your fork
+git push origin main
+```
+
+## Project structure
+
+Key files and directories:
+
+```
+turtlebot3_jazzy_devcontainer/
+├── .devcontainer/              # Dev container configuration
+│   ├── Dockerfile              # Container image definition
+│   ├── devcontainer.json       # VS Code settings
+│   ├── post-create.sh          # Initial setup script
+│   └── post-start.sh           # Startup script
+├── src/                        # ROS2 packages (auto-cloned)
+├── verify-setup.sh             # Setup verification script
+├── .gitignore                  # Git ignore rules
+└── README.md                   # Main documentation
+```
+
+### Configuration files
+
+#### Dockerfile
+
+Defines the container image:
+- Base image: `osrf/ros:jazzy-desktop-full-noble`
+- System packages and dependencies
+- ROS2 and Gazebo installation
+- Development tools
+
+#### devcontainer.json
+
+Configures VS Code integration:
+- VS Code extensions to install
+- Port forwarding (6080 for noVNC)
+- Environment variables
+- Lifecycle scripts (post-create, post-start)
+
+#### post-create.sh
+
+Runs once when container is created:
+- Sources ROS2 environment
+- Clones TurtleBot3 repositories
+- Installs dependencies
+- Sets up bash aliases
+
+#### post-start.sh
+
+Runs every time container starts:
+- Builds ROS2 workspace
+- Displays quick start instructions
+
+## Troubleshooting development issues
+
+### Container won't build
+
+**Check Docker daemon**:
+```bash
+docker ps  # Should not error
+```
+
+**Check available disk space**:
+```bash
+docker system df
+```
+
+**Clean Docker cache**:
+```bash
+docker system prune -a
+```
+
+### Changes not taking effect
+
+**Rebuild without cache**:
+- `F1` → "Dev Containers: Rebuild Container Without Cache"
+
+**Verify file changes**:
+```bash
+git status  # See modified files
+git diff    # See actual changes
+```
+
+### Port conflicts
+
+**Check if port 6080 is in use**:
+
+Windows:
+```powershell
+netstat -ano | findstr :6080
+```
+
+macOS/Linux:
+```bash
+lsof -i :6080
+```
+
+**Change VNC port** in `.devcontainer/devcontainer.json`:
+```json
+"forwardPorts": [6081, 5901]
+```
+
+## Getting help
+
+If you encounter issues:
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/prakash-aryan/turtlebot3_jazzy_devcontainer/issues">
+    Search existing issues or create a new one
+  </Card>
+  
+  <Card title="ROS Discourse" icon="comments" href="https://discourse.ros.org/">
+    Ask general ROS2 and dev container questions
+  </Card>
+</CardGroup>
+
+## Next steps
+
+Once your environment is set up:
+
+1. Read the [contribution guidelines](/contributing/guidelines)
+2. Look for "good first issue" labels in the issue tracker
+3. Join discussions on proposed features
+4. Share your improvements via pull requests
+
+Happy developing!

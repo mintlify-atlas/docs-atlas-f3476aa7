@@ -1,0 +1,119 @@
+---
+title: Port and network issues
+description: Resolve port conflicts and network connectivity problems
+---
+
+Fix port conflicts and network issues preventing access to the VNC desktop.
+
+## Port 6080 already in use
+
+**Symptoms:**
+- VNC web page won't load
+- "Port already allocated" error
+
+<Accordion title="Find and kill the process using port 6080">
+  **Windows (PowerShell):**
+  ```powershell
+  netstat -ano | findstr :6080
+  # Note the PID (last column)
+  taskkill /PID <PID> /F
+  ```
+  
+  **macOS/Linux:**
+  ```bash
+  lsof -i :6080
+  kill <PID>
+  ```
+</Accordion>
+
+<Accordion title="Change VNC port">
+  Edit `.devcontainer/devcontainer.json`:
+  
+  ```json
+  "forwardPorts": [6081, 5901],
+  "portsAttributes": {
+    "6081": {
+      "label": "Desktop (noVNC)",
+      "onAutoForward": "openBrowser"
+    },
+    "5901": {
+      "label": "Desktop (VNC)",
+      "onAutoForward": "ignore"
+    }
+  }
+  ```
+  
+  Then access: http://localhost:6081
+  
+  After making this change, rebuild the container:
+  - Press F1 → "Dev Containers: Rebuild Container"
+</Accordion>
+
+<Accordion title="Manually forward port in VS Code">
+  <Steps>
+    <Step title="Open Ports view">
+      View → Ports
+    </Step>
+    
+    <Step title="Add port forward">
+      - Click "Forward a Port"
+      - Enter 6080
+    </Step>
+    
+    <Step title="Access VNC">
+      Open http://localhost:6080 in your browser
+    </Step>
+  </Steps>
+</Accordion>
+
+## Cannot access VNC
+
+**Symptoms:**
+- http://localhost:6080 doesn't load
+- Connection refused
+
+<Accordion title="Check port forwarding in VS Code">
+  <Steps>
+    <Step title="Open Ports tab">
+      View → Ports
+    </Step>
+    
+    <Step title="Verify port 6080">
+      Port 6080 should be listed and forwarded. If not, add it manually.
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Check noVNC service">
+  Inside the container terminal:
+  
+  ```bash
+  # Check if VNC processes are running
+  ps aux | grep vnc
+  sudo supervisorctl status desktop-lite
+  
+  # Restart if needed
+  sudo supervisorctl restart desktop-lite
+  ```
+  
+  Wait 30 seconds after restarting before accessing VNC.
+</Accordion>
+
+<Accordion title="Try direct VNC connection">
+  If browser-based VNC isn't working, use a VNC client:
+  
+  - Download a VNC client (TigerVNC, RealVNC, etc.)
+  - Connect to: `localhost:5901`
+  - Password: `ros`
+  
+  This bypasses the noVNC web interface.
+</Accordion>
+
+## Port forwarding not working on remote SSH
+
+If you're running VS Code connected to a remote machine via SSH:
+
+1. Ensure port forwarding is enabled in your SSH configuration
+2. Check that firewalls aren't blocking the forwarded ports
+3. Try accessing via the remote machine's IP: `http://<remote-ip>:6080`
+4. Configure VS Code's remote port forwarding explicitly in settings

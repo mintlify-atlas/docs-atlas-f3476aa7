@@ -1,0 +1,488 @@
+---
+title: verify-setup.sh
+description: Detailed documentation of the verify-setup.sh script
+---
+
+## Overview
+
+The `verify-setup.sh` script provides comprehensive verification and diagnostics for the TurtleBot3 development environment. It checks system components, packages, environment variables, and build status.
+
+**Location**: `.devcontainer/verify-setup.sh`
+
+**Execution**: Manual (run by user when needed)
+
+**Runtime**: < 10 seconds
+
+## Usage
+
+```bash
+bash /workspace/turtlebot3_ws/.devcontainer/verify-setup.sh
+```
+
+Or from anywhere:
+
+```bash
+bash .devcontainer/verify-setup.sh
+```
+
+## Script structure
+
+### Header
+
+```bash
+#!/bin/bash
+
+# Quick verification script for TurtleBot3 Jazzy setup
+# Run this after container is built to verify everything works
+
+echo "=========================================="
+echo "TurtleBot3 Jazzy Setup Verification"
+echo "=========================================="
+echo ""
+```
+
+Note: No `set -e` - script always runs all tests even if some fail.
+
+### Color codes
+
+```bash
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+```
+
+ANSI color codes for readable output:
+- Green: Test passed
+- Red: Test failed
+- Yellow: Warning
+- NC: Reset to default
+
+### Test function
+
+```bash
+test_command() {
+    local description=$1
+    local command=$2
+    
+    echo -n "Testing: $description... "
+    if eval $command > /dev/null 2>&1; then
+        echo -e "${GREEN}[PASS]${NC}"
+        return 0
+    else
+        echo -e "${RED}[FAIL]${NC}"
+        return 1
+    fi
+}
+```
+
+**Purpose**: Reusable function for testing commands
+
+**Parameters**:
+- `$1`: Description of what's being tested
+- `$2`: Command to execute
+
+**Behavior**:
+- Executes command silently
+- Displays color-coded result
+- Returns 0 for pass, 1 for fail
+
+### Test counters
+
+```bash
+passed=0
+failed=0
+```
+
+Tracks total number of passed and failed tests.
+
+### Environment sourcing
+
+```bash
+source /opt/ros/jazzy/setup.bash 2>/dev/null
+if [ -f /workspace/turtlebot3_ws/install/setup.bash ]; then
+    source /workspace/turtlebot3_ws/install/setup.bash 2>/dev/null
+fi
+```
+
+Sources ROS2 environment needed for tests.
+
+## Test categories
+
+### 1. System checks
+
+```bash
+echo "1. System Checks"
+echo "----------------------------------------"
+
+if test_command "ROS2 Jazzy installed" "ros2 --version"; then
+    ((passed++))
+else
+    ((failed++))
+fi
+
+if test_command "Gazebo Harmonic installed" "gz sim --version"; then
+    ((passed++))
+else
+    ((failed++))
+fi
+
+if test_command "Python 3 available" "python3 --version"; then
+    ((passed++))
+else
+    ((failed++))
+fi
+
+if test_command "colcon build tool" "colcon --version"; then
+    ((passed++))
+else
+    ((failed++))
+fi
+```
+
+**Tests**:
+- ROS2 Jazzy installation
+- Gazebo Harmonic installation
+- Python 3 availability
+- Colcon build tool
+
+**Critical**: All should pass
+
+### 2. ROS2 package checks
+
+```bash
+echo ""
+echo "2. ROS2 Package Checks"
+echo "----------------------------------------"
+
+if test_command "TurtleBot3 packages" "ros2 pkg list | grep turtlebot3"; then
+    ((passed++))
+else
+    ((failed++))
+fi
+
+if test_command "Navigation2 packages" "ros2 pkg list | grep nav2"; then
+    ((passed++))
+else
+    ((failed++))
+fi
+
+if test_command "Cartographer packages" "ros2 pkg list | grep cartographer"; then
+    ((passed++))
+else
+    ((failed++))
+fi
+```
+
+**Tests**:
+- TurtleBot3 packages presence
+- Navigation2 packages presence
+- Cartographer SLAM packages presence
+
+**Critical**: All should pass after workspace is built
+
+### 3. Environment variables
+
+```bash
+echo ""
+echo "3. Environment Variables"
+echo "----------------------------------------"
+
+echo -n "Checking ROS_DISTRO... "
+if [ "$ROS_DISTRO" = "jazzy" ]; then
+    echo -e "${GREEN}[PASS]${NC} (jazzy)"
+    ((passed++))
+else
+    echo -e "${RED}[FAIL]${NC} (found: $ROS_DISTRO)"
+    ((failed++))
+fi
+
+echo -n "Checking TURTLEBOT3_MODEL... "
+if [ ! -z "$TURTLEBOT3_MODEL" ]; then
+    echo -e "${GREEN}[PASS]${NC} ($TURTLEBOT3_MODEL)"
+    ((passed++))
+else
+    echo -e "${YELLOW}[WARNING]${NC} (not set)"
+fi
+
+echo -n "Checking GZ_VERSION... "
+if [ "$GZ_VERSION" = "harmonic" ]; then
+    echo -e "${GREEN}[PASS]${NC} (harmonic)"
+    ((passed++))
+else
+    echo -e "${YELLOW}[WARNING]${NC} (found: $GZ_VERSION)"
+fi
+```
+
+**Tests**:
+- `ROS_DISTRO`: Should be "jazzy" (critical)
+- `TURTLEBOT3_MODEL`: Should be set (warning if not)
+- `GZ_VERSION`: Should be "harmonic" (warning if not)
+
+**Note**: Some tests show warnings instead of failures
+
+### 4. Directory structure
+
+```bash
+echo ""
+echo "4. Directory Structure"
+echo "----------------------------------------"
+
+echo -n "Checking workspace... "
+if [ -d "/workspace/turtlebot3_ws" ]; then
+    echo -e "${GREEN}[PASS]${NC}"
+    ((passed++))
+else
+    echo -e "${RED}[FAIL]${NC}"
+    ((failed++))
+fi
+
+echo -n "Checking source directory... "
+if [ -d "/workspace/turtlebot3_ws/src" ]; then
+    echo -e "${GREEN}[PASS]${NC}"
+    ((passed++))
+else
+    echo -e "${RED}[FAIL]${NC}"
+    ((failed++))
+fi
+
+echo -n "Checking TurtleBot3 source... "
+if [ -d "/workspace/turtlebot3_ws/src/turtlebot3" ]; then
+    echo -e "${GREEN}[PASS]${NC}"
+    ((passed++))
+else
+    echo -e "${RED}[FAIL]${NC}"
+    ((failed++))
+fi
+```
+
+**Tests**:
+- Workspace directory exists
+- Source directory exists
+- TurtleBot3 source exists
+
+**Critical**: All should pass
+
+### 5. Build status
+
+```bash
+echo ""
+echo "5. Build Status"
+echo "----------------------------------------"
+
+echo -n "Checking build directory... "
+if [ -d "/workspace/turtlebot3_ws/build" ]; then
+    echo -e "${GREEN}[PASS]${NC}"
+    ((passed++))
+else
+    echo -e "${YELLOW}[WARNING]${NC} (not built yet)"
+fi
+
+echo -n "Checking install directory... "
+if [ -d "/workspace/turtlebot3_ws/install" ]; then
+    echo -e "${GREEN}[PASS]${NC}"
+    ((passed++))
+else
+    echo -e "${YELLOW}[WARNING]${NC} (not built yet)"
+fi
+```
+
+**Tests**:
+- Build directory exists
+- Install directory exists
+
+**Note**: Shows warnings instead of failures (workspace may not be built yet)
+
+## Results summary
+
+```bash
+echo ""
+echo "=========================================="
+echo "Verification Results"
+echo "=========================================="
+echo -e "Tests Passed: ${GREEN}$passed${NC}"
+if [ $failed -gt 0 ]; then
+    echo -e "Tests Failed: ${RED}$failed${NC}"
+else
+    echo -e "Tests Failed: $failed"
+fi
+```
+
+Displays summary with color coding.
+
+## Success output
+
+```bash
+if [ $failed -eq 0 ]; then
+    echo -e "${GREEN}[OK] All critical checks passed!${NC}"
+    echo ""
+    echo "Your TurtleBot3 Jazzy environment is ready!"
+    echo ""
+    echo "Quick start:"
+    echo "  1. Terminal 1: tb3_empty"
+    echo "  2. Terminal 2: tb3_teleop"
+    echo "  3. Access VNC at http://localhost:6080"
+    echo ""
+fi
+```
+
+Provides quick start guidance when all tests pass.
+
+## Failure output
+
+```bash
+else
+    echo -e "${RED}[FAIL] Some checks failed${NC}"
+    echo ""
+    echo "Please review the failed tests above."
+    echo "Try rebuilding the workspace with: cb"
+    echo ""
+fi
+```
+
+Provides troubleshooting guidance when tests fail.
+
+## Example output
+
+### All tests passing
+
+```
+==========================================
+TurtleBot3 Jazzy Setup Verification
+==========================================
+
+1. System Checks
+----------------------------------------
+Testing: ROS2 Jazzy installed... [PASS]
+Testing: Gazebo Harmonic installed... [PASS]
+Testing: Python 3 available... [PASS]
+Testing: colcon build tool... [PASS]
+
+2. ROS2 Package Checks
+----------------------------------------
+Testing: TurtleBot3 packages... [PASS]
+Testing: Navigation2 packages... [PASS]
+Testing: Cartographer packages... [PASS]
+
+3. Environment Variables
+----------------------------------------
+Checking ROS_DISTRO... [PASS] (jazzy)
+Checking TURTLEBOT3_MODEL... [PASS] (burger)
+Checking GZ_VERSION... [PASS] (harmonic)
+
+4. Directory Structure
+----------------------------------------
+Checking workspace... [PASS]
+Checking source directory... [PASS]
+Checking TurtleBot3 source... [PASS]
+
+5. Build Status
+----------------------------------------
+Checking build directory... [PASS]
+Checking install directory... [PASS]
+
+==========================================
+Verification Results
+==========================================
+Tests Passed: 15
+Tests Failed: 0
+
+[OK] All critical checks passed!
+
+Your TurtleBot3 Jazzy environment is ready!
+
+Quick start:
+  1. Terminal 1: tb3_empty
+  2. Terminal 2: tb3_teleop
+  3. Access VNC at http://localhost:6080
+
+==========================================
+```
+
+### With failures
+
+```
+2. ROS2 Package Checks
+----------------------------------------
+Testing: TurtleBot3 packages... [FAIL]
+Testing: Navigation2 packages... [PASS]
+Testing: Cartographer packages... [PASS]
+
+...
+
+==========================================
+Verification Results
+==========================================
+Tests Passed: 12
+Tests Failed: 1
+
+[FAIL] Some checks failed
+
+Please review the failed tests above.
+Try rebuilding the workspace with: cb
+
+==========================================
+```
+
+## Use cases
+
+### After first container creation
+
+Verify everything is set up correctly:
+
+```bash
+bash .devcontainer/verify-setup.sh
+```
+
+### Troubleshooting issues
+
+When something doesn't work, run to identify the problem:
+
+```bash
+bash .devcontainer/verify-setup.sh
+```
+
+### After making changes
+
+Verify environment is still functional:
+
+```bash
+bash .devcontainer/verify-setup.sh
+```
+
+### Documentation or sharing
+
+Capture environment status:
+
+```bash
+bash .devcontainer/verify-setup.sh > setup-status.txt
+```
+
+## Exit codes
+
+The script always exits with code 0, regardless of test results. Check the output for actual status.
+
+## Customization
+
+To add custom tests, use the `test_command` function:
+
+```bash
+if test_command "Custom test" "your-command-here"; then
+    ((passed++))
+else
+    ((failed++))
+fi
+```
+
+Or for environment variable checks:
+
+```bash
+echo -n "Checking MY_VAR... "
+if [ "$MY_VAR" = "expected_value" ]; then
+    echo -e "${GREEN}[PASS]${NC}"
+    ((passed++))
+else
+    echo -e "${RED}[FAIL]${NC}"
+    ((failed++))
+fi
+```

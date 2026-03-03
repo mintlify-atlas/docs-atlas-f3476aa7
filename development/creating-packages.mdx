@@ -1,0 +1,187 @@
+---
+title: Creating custom ROS2 packages
+description: Guide to creating new ROS2 packages in your workspace
+---
+
+Learn how to create custom ROS2 packages in the TurtleBot3 workspace for your own robot applications.
+
+## Package types
+
+ROS2 supports two main package types:
+
+- **ament_cmake** - For C++ packages and mixed C++/Python packages
+- **ament_python** - For pure Python packages
+
+## Creating a C++ package
+
+<Steps>
+  <Step title="Navigate to source directory">
+    ```bash
+    cd /workspace/turtlebot3_ws/src
+    ```
+  </Step>
+
+  <Step title="Create the package">
+    ```bash
+    ros2 pkg create --build-type ament_cmake my_package
+    ```
+    
+    This creates a new package with the basic structure:
+    
+    ```
+    my_package/
+    ├── CMakeLists.txt
+    ├── package.xml
+    ├── include/my_package/
+    └── src/
+    ```
+  </Step>
+
+  <Step title="Build the package">
+    ```bash
+    cd /workspace/turtlebot3_ws
+    colcon build --packages-select my_package
+    ```
+  </Step>
+
+  <Step title="Source and test">
+    ```bash
+    source install/setup.bash
+    ros2 pkg list | grep my_package
+    ```
+  </Step>
+</Steps>
+
+## Creating a Python package
+
+<Steps>
+  <Step title="Navigate to source directory">
+    ```bash
+    cd /workspace/turtlebot3_ws/src
+    ```
+  </Step>
+
+  <Step title="Create the package">
+    ```bash
+    ros2 pkg create --build-type ament_python my_python_package
+    ```
+    
+    This creates:
+    
+    ```
+    my_python_package/
+    ├── package.xml
+    ├── setup.py
+    ├── setup.cfg
+    ├── my_python_package/
+    │   └── __init__.py
+    ├── resource/
+    └── test/
+    ```
+  </Step>
+
+  <Step title="Build the package">
+    ```bash
+    cd /workspace/turtlebot3_ws
+    colcon build --packages-select my_python_package --symlink-install
+    ```
+    
+    Note: Use `--symlink-install` for Python packages to modify code without rebuilding.
+  </Step>
+
+  <Step title="Source and test">
+    ```bash
+    source install/setup.bash
+    ros2 pkg list | grep my_python_package
+    ```
+  </Step>
+</Steps>
+
+## Adding dependencies
+
+Specify package dependencies in `package.xml`:
+
+```xml
+<package format="3">
+  <name>my_package</name>
+  <version>0.0.1</version>
+  <description>My custom package</description>
+  <maintainer email="you@example.com">Your Name</maintainer>
+  <license>Apache-2.0</license>
+
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  
+  <exec_depend>turtlebot3_gazebo</exec_depend>
+</package>
+```
+
+After adding dependencies, install them:
+
+```bash
+cd /workspace/turtlebot3_ws
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+## Adding existing packages
+
+To include external ROS2 packages:
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    cd /workspace/turtlebot3_ws/src
+    git clone <package-repository-url>
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    cd /workspace/turtlebot3_ws
+    rosdep install --from-paths src --ignore-src -r -y
+    ```
+  </Step>
+
+  <Step title="Build the workspace">
+    ```bash
+    colcon build --symlink-install
+    ```
+  </Step>
+
+  <Step title="Source and verify">
+    ```bash
+    source install/setup.bash
+    ros2 pkg list | grep <package-name>
+    ```
+  </Step>
+</Steps>
+
+## Package verification
+
+After creating packages, verify they were correctly installed:
+
+```bash
+# List all packages
+ros2 pkg list
+
+# Find specific package
+ros2 pkg list | grep my_package
+
+# Get package information
+ros2 pkg prefix my_package
+
+# Count total packages (from verify-setup.sh)
+find src/ -name "package.xml" | wc -l
+```
+
+The default workspace contains multiple `package.xml` files from TurtleBot3 repositories.
+
+## Best practices
+
+- Use descriptive package names that reflect functionality
+- Always specify dependencies in `package.xml`
+- Use `--symlink-install` for Python packages during development
+- Test packages immediately after creation
+- Commit package source code to version control
+- Document package purpose in the description field

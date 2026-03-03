@@ -1,0 +1,176 @@
+---
+title: Container resources
+description: Adjusting Docker resources for optimal TurtleBot3 simulation performance
+---
+
+The TurtleBot3 dev container requires adequate Docker resources to run Gazebo simulations and ROS2 workloads smoothly. This guide shows you how to allocate CPU, memory, and disk space.
+
+## Resource requirements
+
+### Minimum requirements
+
+- **CPU**: 4 cores
+- **Memory**: 8 GB RAM
+- **Disk space**: 20 GB free
+
+### Recommended requirements
+
+- **CPU**: 6+ cores
+- **Memory**: 16 GB RAM
+- **Disk space**: 50 GB free
+
+<Info>
+The container image itself is approximately 3.5 GB (1 GB base + 2 GB ROS2 + 500 MB Gazebo), but the workspace build artifacts require additional space.
+</Info>
+
+## Adjusting resources on Docker Desktop
+
+Docker Desktop (Windows and macOS) limits container resources by default. You need to adjust these settings for optimal performance.
+
+### Windows and macOS
+
+1. Open Docker Desktop from your system tray or applications menu
+2. Click the gear icon (Settings)
+3. Navigate to **Resources**
+4. Adjust the following sliders:
+   - **CPUs**: Set to 4-6 cores (half your total cores recommended)
+   - **Memory**: Set to 8-16 GB
+   - **Disk image size**: Set to 50 GB or more
+5. Click **Apply & Restart**
+
+<Warning>
+Changing resource allocation requires restarting Docker Desktop, which will stop all running containers.
+</Warning>
+
+### Linux
+
+On Linux, Docker has direct access to system resources without artificial limits. No configuration is needed unless you want to set explicit limits.
+
+## Shared memory configuration
+
+The container uses `--shm-size=2gb` for shared memory, which is required for Gazebo and RViz to function properly.
+
+This is configured in `.devcontainer/devcontainer.json:59-64`:
+
+```json
+"runArgs": [
+  "--network=host",
+  "--privileged",
+  "--shm-size=2gb",
+  "--device=/dev/dri:/dev/dri"
+]
+```
+
+<Info>
+Shared memory is used for inter-process communication. If you encounter crashes with Gazebo or RViz, try increasing this to `4gb`.
+</Info>
+
+## Disk space management
+
+The workspace generates build artifacts in several directories:
+
+- `build/` - Compilation artifacts
+- `install/` - Built packages
+- `log/` - Build and runtime logs
+
+These directories can grow to 1-2 GB after building.
+
+### Cleaning build artifacts
+
+To reclaim disk space:
+
+```bash
+cd /workspace/turtlebot3_ws
+rm -rf build install log
+```
+
+Then rebuild:
+
+```bash
+colcon build --symlink-install
+```
+
+### Cleaning Docker cache
+
+If Docker is consuming too much disk space:
+
+```bash
+# Remove unused images
+docker image prune -a
+
+# Remove unused volumes
+docker volume prune
+
+# Remove everything unused (careful!)
+docker system prune -a --volumes
+```
+
+<Warning>
+Running `docker system prune -a --volumes` will delete all stopped containers, unused images, and volumes. Make sure you don't have important data in Docker volumes.
+</Warning>
+
+## Performance optimization
+
+### Windows-specific optimization
+
+Enable WSL 2 backend for better performance:
+
+1. Docker Desktop → Settings → General
+2. Check **Use WSL 2 based engine**
+3. Click **Apply & Restart**
+
+### macOS-specific optimization
+
+Enable VirtioFS for faster file sharing:
+
+1. Docker Desktop → Settings → General  
+2. Check **Use VirtioFS for file sharing**
+3. Click **Apply & Restart**
+
+## Monitoring resource usage
+
+### Check Docker resource usage
+
+```bash
+# View container resource usage
+docker stats
+
+# Check Docker disk usage
+docker system df
+```
+
+### Inside the container
+
+```bash
+# Check CPU and memory
+top
+
+# Check disk usage
+df -h /workspace
+```
+
+## Troubleshooting
+
+### Container runs slowly
+
+**Symptom**: Gazebo is laggy, build times are very long
+
+**Solution**: Increase CPU cores and memory allocation to recommended levels (6 cores, 16 GB RAM)
+
+### "No space left on device" errors
+
+**Symptom**: Build fails with disk space errors
+
+**Solution**:
+1. Clean build artifacts (see above)
+2. Run `docker system prune` to clean Docker cache
+3. Increase Docker disk image size in Docker Desktop settings
+
+### Out of memory crashes
+
+**Symptom**: Gazebo crashes, container stops unexpectedly
+
+**Solution**:
+1. Increase memory allocation to 16 GB
+2. Close other memory-intensive applications
+3. Increase shared memory with `--shm-size=4gb`

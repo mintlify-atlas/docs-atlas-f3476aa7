@@ -1,0 +1,279 @@
+---
+title: Environment variables
+description: Environment variables used in the TurtleBot3 ROS2 Jazzy container
+---
+
+The dev container uses several environment variables to configure ROS2, Gazebo, and the desktop environment. Understanding these variables helps you customize and troubleshoot the system.
+
+## Container environment variables
+
+These variables are automatically set when the container starts.
+
+### ROS2 variables
+
+#### `ROS_DISTRO`
+
+- **Value**: `jazzy`
+- **Set in**: Dockerfile `.devcontainer/Dockerfile:4`
+- **Purpose**: Specifies the ROS2 distribution version
+- **Usage**: Used by ROS2 tools to locate packages and configurations
+
+```bash
+echo $ROS_DISTRO  # Output: jazzy
+```
+
+#### `ROS_DOMAIN_ID`
+
+- **Value**: `30`
+- **Set in**: `devcontainer.json:51`
+- **Purpose**: Network isolation for ROS2 nodes
+- **Range**: 0-232
+- **Usage**: Prevents interference between multiple ROS2 systems on the same network
+
+```bash
+echo $ROS_DOMAIN_ID  # Output: 30
+```
+
+<Info>
+If you're running multiple ROS2 systems on the same network, use different domain IDs (e.g., 30, 31, 32) to keep them isolated.
+</Info>
+
+#### `RMW_IMPLEMENTATION`
+
+- **Value**: `rmw_cyclonedds_cpp`
+- **Set in**: `devcontainer.json:53`
+- **Purpose**: ROS2 middleware implementation (DDS)
+- **Options**: `rmw_cyclonedds_cpp`, `rmw_fastrtps_cpp`
+- **Usage**: CycloneDDS provides better performance for simulation workloads
+
+```bash
+echo $RMW_IMPLEMENTATION  # Output: rmw_cyclonedds_cpp
+```
+
+### TurtleBot3 variables
+
+#### `TURTLEBOT3_MODEL`
+
+- **Value**: `burger` (default)
+- **Set in**: `devcontainer.json:52`
+- **Purpose**: Specifies which TurtleBot3 model to use
+- **Options**: `burger`, `waffle`, `waffle_pi`
+- **Usage**: Launch files read this to spawn the correct robot model
+
+```bash
+echo $TURTLEBOT3_MODEL  # Output: burger
+```
+
+See the [Robot models](/configuration/robot-models) page for more details.
+
+### Gazebo variables
+
+#### `GZ_VERSION`
+
+- **Value**: `harmonic`
+- **Set in**: `devcontainer.json:54` and `Dockerfile:5`
+- **Purpose**: Specifies Gazebo version
+- **Usage**: Ensures compatibility between ROS2 Jazzy and Gazebo Harmonic
+
+```bash
+echo $GZ_VERSION  # Output: harmonic
+```
+
+### Display variables
+
+#### `DISPLAY`
+
+- **Value**: `:1`
+- **Set in**: `devcontainer.json:50`
+- **Purpose**: X11 display server for GUI applications
+- **Usage**: Routes GUI windows to the VNC server
+
+```bash
+echo $DISPLAY  # Output: :1
+```
+
+<Info>
+If GUI applications (Gazebo, RViz) don't appear in VNC, verify `DISPLAY` is set to `:1`.
+</Info>
+
+#### `QT_QPA_PLATFORM`
+
+- **Value**: `xcb`
+- **Set in**: `devcontainer.json:55`
+- **Purpose**: Qt platform plugin for GUI rendering
+- **Usage**: Required for RViz2 and other Qt-based tools
+
+```bash
+echo $QT_QPA_PLATFORM  # Output: xcb
+```
+
+### Graphics variables
+
+#### `LIBGL_ALWAYS_SOFTWARE`
+
+- **Value**: `0` (default, uses hardware acceleration if available)
+- **Set in**: `devcontainer.json:56` with fallback from host
+- **Purpose**: Force software rendering for OpenGL
+- **Options**: `0` (hardware), `1` (software)
+- **Usage**: Fallback when GPU acceleration isn't available or causes issues
+
+```bash
+echo $LIBGL_ALWAYS_SOFTWARE  # Output: 0 or 1
+```
+
+The post-create script (`.devcontainer/post-create.sh:47-53`) automatically enables software rendering if no GPU is detected:
+
+```bash
+if [ "$USE_SOFTWARE_RENDERING" = true ]; then
+    cat >> ~/.bashrc << 'BASHRC_EOF'
+# Software rendering (for GPU compatibility)
+export LIBGL_ALWAYS_SOFTWARE=1
+echo "[INFO] Using software rendering for Gazebo (GPU not available)"
+BASHRC_EOF
+fi
+```
+
+<Warning>
+Software rendering is significantly slower than hardware acceleration. Only enable it if Gazebo crashes with GPU rendering.
+</Warning>
+
+## Workspace variables
+
+These are set in your `.bashrc` by the post-create script.
+
+### Complete bashrc configuration
+
+From `.devcontainer/post-create.sh:29-44`:
+
+```bash
+# ROS2 Jazzy setup
+source /opt/ros/jazzy/setup.bash
+if [ -f /workspace/turtlebot3_ws/install/setup.bash ]; then
+    source /workspace/turtlebot3_ws/install/setup.bash
+fi
+
+# Environment variables
+export ROS_DOMAIN_ID=30
+export TURTLEBOT3_MODEL=burger
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export GZ_VERSION=harmonic
+export QT_QPA_PLATFORM=xcb
+```
+
+## Modifying environment variables
+
+### Temporary change (current session)
+
+Set for the current terminal session only:
+
+```bash
+export TURTLEBOT3_MODEL=waffle
+export ROS_DOMAIN_ID=31
+```
+
+### Permanent change (all sessions)
+
+#### Option 1: Edit devcontainer.json (recommended)
+
+Edit `.devcontainer/devcontainer.json` and rebuild:
+
+```json
+"remoteEnv": {
+  "ROS_DOMAIN_ID": "31",
+  "TURTLEBOT3_MODEL": "waffle"
+}
+```
+
+Rebuild: `F1` → **Dev Containers: Rebuild Container**
+
+#### Option 2: Edit bashrc
+
+Add to `~/.bashrc`:
+
+```bash
+export TURTLEBOT3_MODEL=waffle
+export ROS_DOMAIN_ID=31
+```
+
+Then source it:
+
+```bash
+source ~/.bashrc
+```
+
+## Verifying environment
+
+Check all critical variables:
+
+```bash
+echo "ROS_DISTRO: $ROS_DISTRO"
+echo "ROS_DOMAIN_ID: $ROS_DOMAIN_ID"
+echo "TURTLEBOT3_MODEL: $TURTLEBOT3_MODEL"
+echo "RMW_IMPLEMENTATION: $RMW_IMPLEMENTATION"
+echo "GZ_VERSION: $GZ_VERSION"
+echo "DISPLAY: $DISPLAY"
+echo "LIBGL_ALWAYS_SOFTWARE: $LIBGL_ALWAYS_SOFTWARE"
+```
+
+Or use the verification script:
+
+```bash
+bash /workspace/turtlebot3_ws/.devcontainer/verify-setup.sh
+```
+
+This script checks all environment variables (`.devcontainer/verify-setup.sh:92-119`).
+
+## Common customizations
+
+### Use different DDS implementation
+
+```bash
+export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+```
+
+### Isolate from other ROS2 systems
+
+```bash
+export ROS_DOMAIN_ID=42  # Use any number 0-232
+```
+
+### Force software rendering
+
+```bash
+export LIBGL_ALWAYS_SOFTWARE=1
+```
+
+Or use the pre-configured software rendering aliases from `.devcontainer/post-create.sh:68-71`:
+
+```bash
+tb3_empty_sw   # Launch with software rendering
+tb3_world_sw
+tb3_house_sw
+```
+
+## Troubleshooting
+
+### Variable not set
+
+**Symptom**: `echo $VARIABLE` returns empty
+
+**Solution**:
+```bash
+source ~/.bashrc
+# Or restart the terminal
+```
+
+### Variables reset after reopening terminal
+
+**Symptom**: Variables work in one terminal but not in new ones
+
+**Solution**: Add the export to `~/.bashrc` to make it permanent, or set in `devcontainer.json` and rebuild.
+
+### ROS2 nodes can't communicate
+
+**Symptom**: Topics don't appear, nodes are isolated
+
+**Solution**: Verify all terminals use the same `ROS_DOMAIN_ID`:
+```bash
+echo $ROS_DOMAIN_ID  # Should be consistent across all terminals
+```

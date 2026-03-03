@@ -1,0 +1,382 @@
+---
+title: Aliases
+description: All bash aliases configured in the TurtleBot3 development environment
+---
+
+## Overview
+
+The TurtleBot3 development environment includes convenient bash aliases configured in `~/.bashrc` by the post-create.sh script. These aliases simplify common ROS2 and TurtleBot3 operations.
+
+## Alias reference
+
+### Build and source aliases
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `cb` | `cd /workspace/turtlebot3_ws && colcon build --symlink-install` | Build workspace with symlink install |
+| `sb` | `source /workspace/turtlebot3_ws/install/setup.bash` | Source workspace overlay |
+
+### TurtleBot3 simulation aliases
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `tb3_empty` | `ros2 launch turtlebot3_gazebo empty_world.launch.py` | Launch TurtleBot3 in empty world |
+| `tb3_world` | `ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py` | Launch TurtleBot3 in TurtleBot3 world |
+| `tb3_house` | `ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py` | Launch TurtleBot3 in house world |
+
+### TurtleBot3 control aliases
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `tb3_teleop` | `ros2 run turtlebot3_teleop teleop_keyboard` | Launch keyboard teleoperation |
+
+### Navigation and SLAM aliases
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `tb3_slam` | `ros2 launch turtlebot3_cartographer cartographer.launch.py use_sim_time:=True` | Launch Cartographer SLAM |
+| `tb3_nav` | `ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/my_map.yaml` | Launch Navigation2 with map |
+
+### Software rendering aliases
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `tb3_empty_sw` | `LIBGL_ALWAYS_SOFTWARE=1 ros2 launch turtlebot3_gazebo empty_world.launch.py` | Empty world with software rendering |
+| `tb3_world_sw` | `LIBGL_ALWAYS_SOFTWARE=1 ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py` | TurtleBot3 world with software rendering |
+| `tb3_house_sw` | `LIBGL_ALWAYS_SOFTWARE=1 ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py` | House world with software rendering |
+
+## Detailed usage
+
+### Build and source
+
+#### cb - Build workspace
+
+```bash
+cb
+```
+
+**What it does**:
+1. Changes to workspace directory
+2. Runs colcon build with symlink install
+
+**When to use**:
+- After modifying C++ source code
+- After adding new packages
+- After pulling changes from git
+
+**Options**: Add colcon flags after the alias:
+```bash
+cb --packages-select turtlebot3_gazebo
+cb --parallel-workers 2
+```
+
+#### sb - Source workspace
+
+```bash
+sb
+```
+
+**What it does**: Sources the workspace overlay to make your packages available
+
+**When to use**:
+- After building the workspace
+- When opening a new terminal (if not in .bashrc)
+- After installing new packages
+
+**Note**: Not needed if workspace is sourced in `.bashrc` (which it is by default)
+
+### Simulation worlds
+
+#### tb3_empty - Empty world
+
+```bash
+tb3_empty
+```
+
+**Description**: Launches TurtleBot3 Burger in an empty Gazebo world
+
+**Use case**: Testing basic robot functionality without obstacles
+
+**What you'll see**:
+- Gazebo window with flat ground plane
+- TurtleBot3 Burger robot in the center
+
+**Access**: Use VNC at http://localhost:6080 to see the Gazebo GUI
+
+#### tb3_world - TurtleBot3 world
+
+```bash
+tb3_world
+```
+
+**Description**: Launches TurtleBot3 in the official TurtleBot3 world
+
+**Use case**: Testing navigation and SLAM in structured environment
+
+**Features**:
+- Walls forming a square arena
+- Multiple obstacles
+- Good for testing obstacle avoidance
+
+#### tb3_house - House world
+
+```bash
+tb3_house
+```
+
+**Description**: Launches TurtleBot3 in a simulated house environment
+
+**Use case**: Testing in realistic indoor environment
+
+**Features**:
+- Multiple rooms
+- Furniture and obstacles
+- Realistic home layout
+
+### Teleoperation
+
+#### tb3_teleop - Keyboard control
+
+```bash
+tb3_teleop
+```
+
+**Description**: Launches keyboard teleoperation interface
+
+**Controls**:
+```
+   w
+a  s  d
+   x
+
+w/x : increase/decrease linear velocity
+a/d : increase/decrease angular velocity
+s : force stop
+space : force stop
+```
+
+**Usage**:
+1. Launch simulation in one terminal: `tb3_empty`
+2. Launch teleop in another terminal: `tb3_teleop`
+3. Use keyboard to control the robot
+
+**Tips**:
+- Keep the teleop terminal focused to send commands
+- Start with small velocities
+- Use 's' or space for emergency stop
+
+### SLAM and navigation
+
+#### tb3_slam - Cartographer SLAM
+
+```bash
+tb3_slam
+```
+
+**Description**: Launches Cartographer SLAM for mapping
+
+**Usage workflow**:
+1. Terminal 1: Launch simulation
+   ```bash
+   tb3_world
+   ```
+2. Terminal 2: Launch SLAM
+   ```bash
+   tb3_slam
+   ```
+3. Terminal 3: Control robot to explore
+   ```bash
+   tb3_teleop
+   ```
+4. Save map when done:
+   ```bash
+   mkdir -p ~/maps
+   ros2 run nav2_map_server map_saver_cli -f ~/maps/my_map
+   ```
+
+**What you'll see**:
+- RViz window showing real-time map building
+- Robot position and laser scan
+- Occupancy grid map
+
+#### tb3_nav - Navigation2
+
+```bash
+tb3_nav
+```
+
+**Description**: Launches Navigation2 stack with pre-saved map
+
+**Prerequisites**: Must have a saved map at `~/maps/my_map.yaml`
+
+**Usage workflow**:
+1. Terminal 1: Launch simulation
+   ```bash
+   tb3_world
+   ```
+2. Terminal 2: Launch navigation
+   ```bash
+   tb3_nav
+   ```
+3. In RViz:
+   - Use "2D Pose Estimate" to set initial pose
+   - Use "Nav2 Goal" to send navigation goals
+
+**Custom map**: Modify the alias to use different map:
+```bash
+ros2 launch turtlebot3_navigation2 navigation2.launch.py \
+  use_sim_time:=True \
+  map:=~/maps/other_map.yaml
+```
+
+### Software rendering
+
+Use these aliases if Gazebo crashes or has rendering issues.
+
+#### When to use software rendering
+
+- Gazebo crashes on startup
+- Black screen in Gazebo
+- GPU driver issues
+- Running in environments without GPU
+- Running on older hardware
+
+#### tb3_empty_sw, tb3_world_sw, tb3_house_sw
+
+```bash
+tb3_empty_sw
+tb3_world_sw
+tb3_house_sw
+```
+
+**Description**: Same as regular simulation aliases but with software rendering
+
+**Performance**: Slower than hardware rendering but more compatible
+
+**How it works**: Sets `LIBGL_ALWAYS_SOFTWARE=1` to force Mesa software rendering
+
+## Common workflows
+
+### Basic simulation and control
+
+```bash
+# Terminal 1: Launch simulation
+tb3_empty
+
+# Terminal 2: Control robot
+tb3_teleop
+```
+
+### Mapping (SLAM)
+
+```bash
+# Terminal 1: Launch world
+tb3_world
+
+# Terminal 2: Launch SLAM
+tb3_slam
+
+# Terminal 3: Drive robot around
+tb3_teleop
+
+# Terminal 4: Save map when done
+mkdir -p ~/maps
+ros2 run nav2_map_server map_saver_cli -f ~/maps/my_map
+```
+
+### Autonomous navigation
+
+```bash
+# Terminal 1: Launch world
+tb3_world
+
+# Terminal 2: Launch navigation
+tb3_nav
+
+# Use RViz GUI to:
+# 1. Set initial pose (2D Pose Estimate)
+# 2. Send navigation goal (Nav2 Goal)
+```
+
+### Development workflow
+
+```bash
+# Modify code in src/
+vim src/turtlebot3/...
+
+# Build
+cb
+
+# Source (if needed)
+sb
+
+# Test
+tb3_empty
+```
+
+## Customization
+
+To add your own aliases, edit `~/.bashrc`:
+
+```bash
+vim ~/.bashrc
+```
+
+Add aliases at the end:
+
+```bash
+# My custom aliases
+alias my_launch='ros2 launch my_package my_launch.launch.py'
+alias quick_test='cb && ros2 run my_package my_node'
+```
+
+Reload `.bashrc`:
+
+```bash
+source ~/.bashrc
+```
+
+## Troubleshooting
+
+### Alias not found
+
+**Problem**: `bash: tb3_empty: command not found`
+
+**Solution**: Source your `.bashrc`:
+```bash
+source ~/.bashrc
+```
+
+### Simulation crashes
+
+**Problem**: Gazebo crashes on launch
+
+**Solution**: Try software rendering version:
+```bash
+tb3_empty_sw
+```
+
+### Wrong robot model
+
+**Problem**: Wrong TurtleBot3 model appears (waffle instead of burger)
+
+**Solution**: Check `TURTLEBOT3_MODEL` environment variable:
+```bash
+echo $TURTLEBOT3_MODEL
+```
+
+Should be `burger`. If not, add to `.bashrc`:
+```bash
+export TURTLEBOT3_MODEL=burger
+```
+
+### Navigation can't find map
+
+**Problem**: `tb3_nav` fails with map not found
+
+**Solution**: Verify map exists:
+```bash
+ls ~/maps/my_map.yaml
+```
+
+If not, create a map using SLAM workflow first.

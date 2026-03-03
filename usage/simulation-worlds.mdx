@@ -1,0 +1,281 @@
+---
+title: Simulation worlds
+description: Different Gazebo environments for testing and development
+---
+
+The TurtleBot3 development container includes three pre-configured simulation worlds, each designed for different testing scenarios and skill levels.
+
+## Available worlds
+
+### Empty world
+
+A minimal simulation environment with a flat ground plane and no obstacles.
+
+```bash
+tb3_empty
+```
+
+**Use cases:**
+- Testing basic robot movement
+- Learning teleoperation controls
+- Verifying sensor functionality
+- Debugging without environmental complexity
+- Quick simulation startup for development
+
+**Characteristics:**
+- Fastest loading time
+- Minimal computational resources
+- Clean environment for isolated testing
+- Ideal for beginners
+
+<Tip>
+Start with the empty world when learning the basics or testing new code before moving to more complex environments.
+</Tip>
+
+### TurtleBot3 world
+
+An environment specifically designed for TurtleBot3 featuring obstacles, barriers, and confined spaces.
+
+```bash
+tb3_world
+```
+
+**Use cases:**
+- Testing obstacle detection and avoidance
+- Navigation algorithm development
+- SLAM in structured environments
+- Collision detection testing
+- Path planning validation
+
+**Characteristics:**
+- Multiple obstacles of varying sizes
+- Narrow passages for precision navigation
+- Moderate computational requirements
+- Balanced complexity for intermediate users
+
+<Note>
+This world is excellent for testing navigation algorithms before deploying to more complex environments.
+</Note>
+
+### House environment
+
+A detailed indoor house simulation with multiple rooms, furniture, and realistic indoor layout.
+
+```bash
+tb3_house
+```
+
+**Use cases:**
+- Advanced SLAM mapping
+- Complex autonomous navigation
+- Multi-room exploration
+- Realistic indoor robotics scenarios
+- Final testing before real-world deployment
+
+**Characteristics:**
+- Multiple interconnected rooms
+- Furniture and household objects
+- Realistic indoor environment
+- Higher computational requirements
+- Suitable for advanced testing
+
+<Warning>
+The house environment requires more system resources. Ensure your Docker container has sufficient CPU and memory allocated (4+ cores, 8GB+ RAM recommended).
+</Warning>
+
+## Launching simulation worlds
+
+### Using aliases
+
+The quickest way to launch any world:
+
+<CodeGroup>
+```bash Empty world
+tb3_empty
+```
+
+```bash TurtleBot3 world
+tb3_world
+```
+
+```bash House environment
+tb3_house
+```
+</CodeGroup>
+
+### Using full commands
+
+If you prefer explicit commands or need to customize launch parameters:
+
+<CodeGroup>
+```bash Empty world
+ros2 launch turtlebot3_gazebo empty_world.launch.py
+```
+
+```bash TurtleBot3 world
+ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+```
+
+```bash House environment
+ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py
+```
+</CodeGroup>
+
+## Accessing the simulation
+
+After launching any world, access the Gazebo GUI through the VNC desktop.
+
+<Steps>
+  <Step title="Launch a world">
+    Start your chosen simulation environment:
+    ```bash
+    tb3_world
+    ```
+  </Step>
+  
+  <Step title="Open VNC in browser">
+    Navigate to the VNC desktop in your web browser:
+    ```
+    http://localhost:6080
+    ```
+  </Step>
+  
+  <Step title="Enter password">
+    When prompted, enter the VNC password:
+    ```
+    ros
+    ```
+  </Step>
+  
+  <Step title="View Gazebo">
+    You should see the Gazebo simulator running with your chosen world and the TurtleBot3 robot.
+  </Step>
+</Steps>
+
+## Switching between worlds
+
+To switch to a different world, you must stop the current simulation first.
+
+<Steps>
+  <Step title="Stop current simulation">
+    Press `Ctrl+C` in the terminal where the simulation is running.
+  </Step>
+  
+  <Step title="Launch new world">
+    Start the desired world:
+    ```bash
+    tb3_house
+    ```
+  </Step>
+</Steps>
+
+<Tip>
+If the new simulation doesn't start cleanly, kill any remaining Gazebo processes:
+```bash
+pkill -9 gz
+```
+</Tip>
+
+## Software rendering mode
+
+If you experience crashes or poor performance with GPU rendering, use software rendering variants.
+
+<CodeGroup>
+```bash Empty world
+tb3_empty_sw
+```
+
+```bash TurtleBot3 world
+tb3_world_sw
+```
+
+```bash House environment
+tb3_house_sw
+```
+</CodeGroup>
+
+These aliases automatically set `LIBGL_ALWAYS_SOFTWARE=1` for stable software-based rendering.
+
+## Choosing the right world
+
+### For beginners
+
+Start with the **empty world** to:
+- Learn keyboard teleoperation
+- Understand ROS2 topics and nodes
+- Test basic robot movement
+- Familiarize yourself with the environment
+
+### For intermediate users
+
+Use **TurtleBot3 world** to:
+- Practice SLAM mapping
+- Test navigation algorithms
+- Learn obstacle avoidance
+- Develop path planning skills
+
+### For advanced users
+
+Use **house environment** to:
+- Create complex maps
+- Test multi-room navigation
+- Simulate realistic scenarios
+- Validate production-ready algorithms
+
+## Troubleshooting
+
+### Simulation won't start
+
+<Steps>
+  <Step title="Verify TURTLEBOT3_MODEL">
+    Check that the robot model is set:
+    ```bash
+    echo $TURTLEBOT3_MODEL
+    ```
+    Should output: `burger`
+  </Step>
+  
+  <Step title="Kill existing processes">
+    ```bash
+    pkill -9 gz
+    pkill -9 gzserver
+    pkill -9 gzclient
+    ```
+  </Step>
+  
+  <Step title="Relaunch simulation">
+    ```bash
+    tb3_empty
+    ```
+  </Step>
+</Steps>
+
+### No robot visible in Gazebo
+
+<Steps>
+  <Step title="Source workspace">
+    ```bash
+    sb
+    ```
+  </Step>
+  
+  <Step title="Verify packages">
+    ```bash
+    ros2 pkg list | grep turtlebot3
+    ```
+  </Step>
+  
+  <Step title="Rebuild if needed">
+    ```bash
+    cb
+    sb
+    ```
+  </Step>
+</Steps>
+
+### Poor performance
+
+- Allocate more resources in Docker Desktop (Settings → Resources)
+- Use software rendering mode with `_sw` aliases
+- Choose a simpler world (empty instead of house)
+- Close unnecessary applications on your host system

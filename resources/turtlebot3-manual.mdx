@@ -1,0 +1,102 @@
+---
+title: TurtleBot3 manual
+description: Official TurtleBot3 documentation and platform specifications
+---
+
+Access the complete TurtleBot3 documentation for detailed hardware specifications, software guides, and robotics applications.
+
+## Official manual
+
+<Card title="TurtleBot3 e-Manual" icon="robot" href="https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/">
+  Official TurtleBot3 guide from ROBOTIS covering all models and features
+</Card>
+
+## Platform overview
+
+The TurtleBot3 is a small, affordable, programmable, ROS-based mobile robot designed for education, research, and product prototyping.
+
+### Available models
+
+This dev container supports all TurtleBot3 models:
+
+- **Burger**: Compact two-wheeled robot, ideal for learning and indoor navigation
+- **Waffle**: Larger platform with additional sensors and payload capacity
+- **Waffle Pi**: Extended version with Raspberry Pi camera and LiDAR
+
+<Info>
+  The default configuration uses the Burger model. You can change this by modifying the `TURTLEBOT3_MODEL` environment variable in `.devcontainer/devcontainer.json`.
+</Info>
+
+## Key features
+
+### Hardware specifications
+
+- **Differential drive**: Two-wheeled mobile base for omnidirectional movement
+- **LiDAR sensor**: 360-degree laser range finder for mapping and obstacle detection
+- **IMU**: Inertial measurement unit for orientation tracking
+- **Odometry**: Wheel encoders for position estimation
+
+### Software capabilities
+
+<CardGroup cols={2}>
+  <Card title="SLAM" icon="map-location-dot">
+    Simultaneous localization and mapping using Cartographer or SLAM Toolbox
+  </Card>
+  
+  <Card title="Navigation" icon="route">
+    Autonomous navigation with obstacle avoidance using Navigation2 stack
+  </Card>
+  
+  <Card title="Manipulation" icon="hand">
+    Optional manipulator arm for pick-and-place tasks (Waffle/Waffle Pi)
+  </Card>
+  
+  <Card title="Vision" icon="camera">
+    Camera-based object detection and tracking (Waffle Pi)
+  </Card>
+</CardGroup>
+
+## Simulation environments
+
+The dev container includes pre-configured Gazebo worlds:
+
+### Empty world
+Minimal environment for testing basic movement and control algorithms.
+
+```bash
+tb3_empty
+```
+
+### TurtleBot3 world
+Indoor environment with obstacles, perfect for navigation testing.
+
+```bash
+tb3_world
+```
+
+### House environment
+Complex multi-room layout for advanced SLAM and navigation scenarios.
+
+```bash
+tb3_house
+```
+
+## GitHub repositories
+
+<Info>
+  Report bugs or contribute to TurtleBot3 development through the official GitHub repositories.
+</Info>
+
+<Card title="TurtleBot3 Issues" icon="github" href="https://github.com/ROBOTIS-GIT/turtlebot3/issues">
+  Bug reports and feature requests for TurtleBot3 packages
+</Card>
+
+## Common operations
+
+Refer to the TurtleBot3 manual for detailed instructions on:
+
+- **Teleoperation**: Manual robot control via keyboard or joystick
+- **SLAM operation**: Building maps of unknown environments
+- **Navigation setup**: Configuring autonomous navigation with existing maps
+- **Sensor calibration**: Fine-tuning LiDAR and IMU performance
+- **Custom applications**: Developing your own robotics software

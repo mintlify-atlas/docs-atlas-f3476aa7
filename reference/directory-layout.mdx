@@ -1,0 +1,88 @@
+---
+title: Directory layout
+description: Complete project directory structure for the TurtleBot3 ROS2 Jazzy Dev Container
+---
+
+## Project structure
+
+The TurtleBot3 ROS2 Jazzy Dev Container follows a standard ROS2 workspace layout with additional development container configuration.
+
+### Root directory
+
+```
+.
+├── .devcontainer/          # Development container configuration
+│   ├── Dockerfile          # Container image definition
+│   ├── devcontainer.json   # VS Code Dev Container settings
+│   ├── post-create.sh      # One-time setup script
+│   ├── post-start.sh       # Run on every container start
+│   └── verify-setup.sh     # Setup verification tool
+├── .git/                   # Git repository metadata
+├── .gitattributes          # Git attributes configuration
+├── .gitignore              # Git ignore patterns
+├── LICENSE                 # Project license
+└── README.md               # Project documentation
+```
+
+### Workspace directory (/workspace/turtlebot3_ws)
+
+Once the container is built and running, the workspace structure is:
+
+```
+/workspace/turtlebot3_ws/
+├── .devcontainer/          # Dev container scripts (mounted)
+├── src/                    # Source code directory
+│   ├── DynamixelSDK/       # Dynamixel motor SDK
+│   ├── turtlebot3/         # TurtleBot3 core packages
+│   ├── turtlebot3_msgs/    # TurtleBot3 message definitions
+│   └── turtlebot3_simulations/  # Gazebo simulation packages
+├── build/                  # Build artifacts (created after build)
+├── install/                # Installed packages (created after build)
+└── log/                    # Build logs (created after build)
+```
+
+### Source packages
+
+The `src/` directory contains the following ROS2 packages:
+
+#### DynamixelSDK
+SDK for controlling Dynamixel smart actuators used in TurtleBot3.
+
+#### turtlebot3
+Core TurtleBot3 packages including:
+- `turtlebot3` - Meta package
+- `turtlebot3_bringup` - Launch files for hardware
+- `turtlebot3_description` - URDF robot models
+- `turtlebot3_teleop` - Teleoperation nodes
+- `turtlebot3_cartographer` - SLAM configuration
+- `turtlebot3_navigation2` - Navigation configuration
+- `turtlebot3_node` - Main robot node
+
+#### turtlebot3_msgs
+Custom message and service definitions for TurtleBot3.
+
+#### turtlebot3_simulations
+Gazebo simulation packages:
+- `turtlebot3_gazebo` - Gazebo simulation launch files and worlds
+- `turtlebot3_fake_node` - Simulated robot node
+
+### User home directory
+
+Additional directories created in the user's home:
+
+```
+~/
+├── maps/                   # Directory for saved SLAM maps
+└── GPU_INFO.txt           # GPU detection results
+```
+
+## Key locations
+
+| Path | Description |
+|------|-------------|
+| `/workspace/turtlebot3_ws` | Main ROS2 workspace |
+| `/workspace/turtlebot3_ws/src` | Source code directory |
+| `/workspace/turtlebot3_ws/.devcontainer` | Dev container configuration |
+| `/opt/ros/jazzy` | ROS2 Jazzy installation |
+| `~/maps` | SLAM map storage |
+| `~/.bashrc` | User shell configuration (modified by scripts) |

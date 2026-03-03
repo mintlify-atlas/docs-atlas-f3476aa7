@@ -1,0 +1,323 @@
+---
+title: Technology stack
+description: Technologies and frameworks used in the TurtleBot3 ROS2 Jazzy Dev Container
+---
+
+The TurtleBot3 ROS2 Jazzy Dev Container integrates multiple open-source technologies to create a complete robotics development environment. This page details each technology, its version, and its role in the stack.
+
+## Container technologies
+
+### Docker
+
+Docker provides the containerization foundation for the entire environment. The container is built from the official OSRF (Open Source Robotics Foundation) ROS2 base image.
+
+**Base image**: `osrf/ros:jazzy-desktop-full-noble`
+- Ubuntu 24.04 LTS (Noble Numbat)
+- Pre-installed ROS2 Jazzy desktop-full variant
+- Official OSRF-maintained image
+
+**Container configuration**:
+```json
+"runArgs": [
+  "--network=host",
+  "--privileged",
+  "--shm-size=2gb",
+  "--device=/dev/dri:/dev/dri"
+]
+```
+
+<Note>
+The `--privileged` flag and device mounting enable GPU acceleration for Gazebo and RViz2.
+</Note>
+
+### VS Code Dev Containers
+
+VS Code Dev Containers allow you to develop inside the Docker container with a native development experience.
+
+**Installed extensions**:
+- `ms-python.python` - Python language support
+- `ms-vscode.cpptools` - C/C++ IntelliSense and debugging
+- `ms-vscode.cmake-tools` - CMake integration
+- `twxs.cmake` - CMake language support
+- `ms-iot.vscode-ros` - ROS development tools
+
+**Features**:
+- `common-utils` - Essential development utilities
+- `desktop-lite` - Lightweight desktop environment with noVNC
+
+### noVNC desktop
+
+Provides browser-based access to a full Linux desktop environment.
+
+**Configuration**:
+- Web port: 6080 (automatically opens in browser)
+- VNC port: 5901
+- Password: `ros`
+- Virtual display: `:1`
+
+<Tip>
+Access the desktop by navigating to http://localhost:6080 in any web browser. No additional VNC client needed.
+</Tip>
+
+## ROS2 framework
+
+### ROS2 Jazzy Jalisco
+
+ROS2 Jazzy is the latest LTS (Long Term Support) release of the Robot Operating System 2.
+
+**Distribution**: `jazzy`
+**Base OS**: Ubuntu 24.04 Noble
+**Installation variant**: `desktop-full`
+
+**Included packages**:
+- Core ROS2 libraries and tools
+- `rviz2` - 3D visualization
+- `rqt` and `rqt-common-plugins` - Qt-based GUI tools
+- `robot-state-publisher` - Robot state publishing
+- `joint-state-publisher` - Joint state management
+- `xacro` - XML macro language for robot description
+- `tf2-ros` and `tf2-tools` - Transform library
+
+### CycloneDDS
+
+Data Distribution Service (DDS) middleware for ROS2 communication.
+
+**Implementation**: `rmw_cyclonedds_cpp`
+
+```bash
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+```
+
+CycloneDDS is selected for improved performance and reliability compared to the default FastDDS implementation, especially in containerized environments.
+
+### Navigation2
+
+The navigation stack provides autonomous navigation capabilities.
+
+**Installed packages**:
+- `ros-jazzy-navigation2` - Core navigation framework
+- `ros-jazzy-nav2-bringup` - Launch configurations
+
+**Capabilities**:
+- Path planning
+- Obstacle avoidance
+- Behavior trees
+- Recovery behaviors
+- Waypoint following
+
+### Cartographer
+
+SLAM (Simultaneous Localization and Mapping) implementation.
+
+**Installed packages**:
+- `ros-jazzy-cartographer` - Core SLAM algorithm
+- `ros-jazzy-cartographer-ros` - ROS2 integration
+
+**Features**:
+- Real-time mapping
+- Loop closure detection
+- 2D and 3D SLAM support
+
+## Simulation stack
+
+### Gazebo Harmonic
+
+Gazebo is the physics-based 3D robot simulator.
+
+**Version**: Harmonic (latest stable release)
+**Package**: `gz-harmonic`
+
+```bash
+export GZ_VERSION=harmonic
+```
+
+**Capabilities**:
+- Physics simulation (ODE, Bullet, Simbody engines)
+- Sensor simulation (lidar, cameras, IMU)
+- Actuator modeling
+- Material properties
+- Lighting and shadows
+
+**Installed worlds**:
+- Empty world - Minimal testing environment
+- TurtleBot3 world - Obstacles and walls for navigation testing
+- House environment - Complex indoor space
+
+### ROS-Gazebo bridge
+
+Connects ROS2 and Gazebo for bidirectional communication.
+
+**Package**: `ros-jazzy-ros-gz`
+
+**Functions**:
+- Publishes Gazebo sensor data to ROS2 topics
+- Forwards ROS2 commands to Gazebo actuators
+- Synchronizes simulation time with ROS2 clock
+
+## TurtleBot3 packages
+
+TurtleBot3 is a low-cost, open-source mobile robot platform.
+
+**Robot model**: Burger (smallest variant)
+
+```bash
+export TURTLEBOT3_MODEL=burger
+```
+
+**Repositories cloned** (all on `jazzy` branch):
+
+1. **DynamixelSDK** - Motor control library
+   - Source: https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+   - Function: Low-level motor communication
+
+2. **turtlebot3_msgs** - Message definitions
+   - Source: https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
+   - Function: Custom message types for TurtleBot3
+
+3. **turtlebot3** - Core packages
+   - Source: https://github.com/ROBOTIS-GIT/turtlebot3.git
+   - Includes: Robot description, bringup, teleoperation
+
+4. **turtlebot3_simulations** - Gazebo integration
+   - Source: https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+   - Includes: Gazebo models, worlds, launch files
+
+<Info>
+All repositories are cloned on the `jazzy` branch during the post-create phase.
+</Info>
+
+## Build system
+
+### colcon
+
+The official ROS2 build system.
+
+**Package**: `python3-colcon-common-extensions`
+
+**Build command**:
+```bash
+colcon build --symlink-install
+```
+
+**Workspace structure**:
+- `src/` - Source packages
+- `build/` - CMake build files
+- `install/` - Installed packages
+- `log/` - Build logs
+
+### rosdep
+
+Dependency management for ROS packages.
+
+**Package**: `python3-rosdep`
+
+**Usage**:
+```bash
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+Automatically installs all package dependencies declared in `package.xml` files.
+
+### vcstool
+
+Version control system tool for managing multiple repositories.
+
+**Package**: `python3-vcstool`
+
+While not actively used in the default setup, it's available for managing custom repository collections.
+
+## Graphics stack
+
+### OpenGL and Mesa
+
+Provides 3D graphics rendering for Gazebo and RViz2.
+
+**Installed packages**:
+- `mesa-utils` - OpenGL testing utilities
+- `libglx-mesa0` - GLX runtime library
+- `libgl1-mesa-dri` - DRI drivers
+- `mesa-vulkan-drivers` - Vulkan support
+
+**Rendering modes**:
+
+1. Hardware acceleration (default when GPU available):
+```bash
+unset LIBGL_ALWAYS_SOFTWARE
+```
+
+2. Software rendering (fallback for compatibility):
+```bash
+export LIBGL_ALWAYS_SOFTWARE=1
+```
+
+<Note>
+The post-create script automatically detects GPU capabilities and configures the appropriate rendering mode.
+</Note>
+
+### Qt platform
+
+Graphical framework used by RViz2 and rqt tools.
+
+```bash
+export QT_QPA_PLATFORM=xcb
+```
+
+Configured to use the X11 windowing system through the XCB (X protocol C-language Binding) backend.
+
+## Development tools
+
+### Programming languages
+
+**Python 3.12**
+- Default interpreter: `/usr/bin/python3`
+- Packages: `setuptools`, `numpy`, `transforms3d`
+
+**C++17**
+- Compiler: GCC (Ubuntu 24.04 default)
+- Build tools: CMake, Make
+
+### Version control
+
+**Git** - Distributed version control system
+- Used to clone TurtleBot3 repositories
+- Available for custom package management
+
+### Text editors
+
+- **Vim** - Terminal-based editor
+- **VS Code** - Primary IDE (runs on host, connects to container)
+
+## Teleoperation tools
+
+**Keyboard teleoperation**:
+- Package: `ros-jazzy-teleop-twist-keyboard`
+- Alias: `tb3_teleop`
+- Controls: i/j/k/l/,
+
+**Joystick teleoperation**:
+- Package: `ros-jazzy-teleop-twist-joy`
+- Requires physical joystick device
+
+## Environment variables
+
+All key environment variables are set in `devcontainer.json` and configured in `post-create.sh`:
+
+```bash
+ROS_DISTRO=jazzy                    # ROS2 version
+ROS_DOMAIN_ID=30                    # Network isolation
+TURTLEBOT3_MODEL=burger             # Robot model selection
+RMW_IMPLEMENTATION=rmw_cyclonedds_cpp  # DDS middleware
+GZ_VERSION=harmonic                 # Gazebo version
+DISPLAY=:1                          # VNC display
+QT_QPA_PLATFORM=xcb                 # Qt windowing
+```
+
+## License information
+
+All components use open-source licenses:
+
+- **ROS2 Jazzy**: Apache 2.0
+- **Gazebo**: Apache 2.0
+- **TurtleBot3**: Apache 2.0
+- **Ubuntu**: Various open-source licenses
+- **Docker**: Apache 2.0

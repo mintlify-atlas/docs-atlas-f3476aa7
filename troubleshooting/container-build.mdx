@@ -1,0 +1,96 @@
+---
+title: Container build failures
+description: Fix issues with container build process and setup scripts
+---
+
+Troubleshoot container build failures and setup script issues.
+
+## Container build fails
+
+**Symptoms:**
+- Build stops with errors
+- Network timeout errors
+
+<Accordion title="Check internet connection">
+  Verify you can reach required package repositories:
+  
+  ```bash
+  ping google.com
+  ping packages.osrfoundation.org
+  ```
+  
+  If packages.osrfoundation.org is unreachable, check your firewall settings or try again later.
+</Accordion>
+
+<Accordion title="Rebuild without cache">
+  Sometimes cached layers cause issues. Force a clean rebuild:
+  
+  - Press F1 in VS Code
+  - Select "Dev Containers: Rebuild Container Without Cache"
+  
+  This will download all packages fresh and may resolve intermittent build failures.
+</Accordion>
+
+<Accordion title="Check Docker disk space">
+  Insufficient disk space can cause build failures:
+  
+  ```bash
+  docker system df
+  # Clean if needed
+  docker system prune -a
+  ```
+</Accordion>
+
+## Post-create script fails
+
+**Symptoms:**
+- Container builds but setup incomplete
+- TurtleBot3 packages not found
+
+<Warning>
+If the post-create script fails, the TurtleBot3 repositories won't be cloned and your workspace will be incomplete.
+</Warning>
+
+**Solution:**
+
+<Steps>
+  <Step title="Manually run setup script">
+    ```bash
+    cd /workspace/turtlebot3_ws
+    bash .devcontainer/post-create.sh
+    ```
+  </Step>
+  
+  <Step title="Check script permissions">
+    ```bash
+    chmod +x .devcontainer/post-create.sh
+    chmod +x .devcontainer/post-start.sh
+    ```
+  </Step>
+  
+  <Step title="Run with debugging (if needed)">
+    ```bash
+    bash -x .devcontainer/post-create.sh
+    ```
+    
+    This shows each command as it executes, helping identify where the failure occurs.
+  </Step>
+</Steps>
+
+## Network timeout during build
+
+If you're experiencing network timeouts when downloading packages:
+
+1. **Check your internet connection stability**
+2. **Try building during off-peak hours** when package repositories are less busy
+3. **Configure a mirror** if you're in a region with slow access to default repositories
+4. **Increase Docker's network timeout** in Docker Desktop settings
+
+## Build takes too long
+
+The first build typically takes 10-15 minutes. If it's taking significantly longer:
+
+- Check that Docker has adequate resources allocated (see [Docker issues](/troubleshooting/docker-issues))
+- Ensure no antivirus software is scanning Docker files in real-time
+- Verify your disk isn't nearly full
+- Close unnecessary applications to free up system resources

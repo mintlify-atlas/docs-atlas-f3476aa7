@@ -1,0 +1,185 @@
+---
+title: System architecture
+description: Understanding the TurtleBot3 ROS2 Jazzy Dev Container architecture and component interactions
+---
+
+The TurtleBot3 ROS2 Jazzy Dev Container uses a multi-layered architecture to provide a complete robotics development environment. This architecture combines containerization, ROS2 middleware, simulation, and visualization components.
+
+## Architecture overview
+
+The system is built on a foundation of Docker containers, with VS Code Dev Containers providing seamless integration between your local development environment and the containerized robotics stack.
+
+![Architecture diagram](https://github.com/user-attachments/assets/deb1de3f-e8ba-4ea8-bf97-1a56f3490b13)
+
+### Core layers
+
+The architecture consists of four primary layers:
+
+**Base container layer**
+- Ubuntu 24.04 Noble base image (`osrf/ros:jazzy-desktop-full-noble`)
+- ROS2 Jazzy desktop-full installation
+- System dependencies and development tools
+- OpenGL and Mesa utilities for GPU support
+
+**Middleware and framework layer**
+- ROS2 Jazzy framework with all core packages
+- CycloneDDS as the RMW implementation for improved performance
+- ROS-Gazebo bridge (`ros-gz`) for simulator integration
+- TF2 for coordinate frame transformations
+
+**Application layer**
+- TurtleBot3 Burger robot packages
+- Navigation2 stack for autonomous navigation
+- Cartographer for SLAM (Simultaneous Localization and Mapping)
+- Teleoperation tools for manual control
+
+**User interface layer**
+- noVNC desktop accessible via web browser (port 6080)
+- VNC server for remote desktop access (port 5901)
+- RViz2 for 3D visualization
+- Gazebo Harmonic for physics simulation
+
+## Component interactions
+
+### ROS2 communication
+
+All components communicate through ROS2's publish-subscribe architecture:
+
+- **Topics**: Asynchronous data streams (e.g., `/scan` for laser data, `/odom` for odometry)
+- **Services**: Synchronous request-response patterns
+- **Actions**: Long-running tasks with feedback (e.g., navigation goals)
+
+<Info>
+The system uses `ROS_DOMAIN_ID=30` to isolate ROS2 network traffic and prevent interference with other ROS2 systems.
+</Info>
+
+### Simulation pipeline
+
+The simulation workflow follows this sequence:
+
+1. Gazebo Harmonic loads the TurtleBot3 Burger model and world
+2. ROS-Gazebo bridge publishes sensor data to ROS2 topics
+3. Control commands from ROS2 are forwarded to Gazebo actuators
+4. Physics engine updates robot state at real-time rates
+5. RViz2 subscribes to topics for visualization
+
+### Display system
+
+The graphical interface uses a virtual display setup:
+
+```bash
+DISPLAY=:1  # VNC virtual display
+QT_QPA_PLATFORM=xcb  # Qt windowing system
+```
+
+This allows GUI applications (Gazebo, RViz2) to run inside the container and be accessed through noVNC in your web browser.
+
+## Container startup sequence
+
+When you open the dev container, a specific sequence of initialization scripts ensures everything is configured correctly.
+
+![Startup sequence diagram](https://github.com/user-attachments/assets/27ea445c-e127-4fca-a428-ea1ce556af6c)
+
+### Build phase
+
+1. **Container image build** (first time only, 10-15 minutes)
+   - Downloads Ubuntu 24.04 base image (~1GB)
+   - Installs ROS2 Jazzy packages (~2GB)
+   - Installs Gazebo Harmonic (~500MB)
+   - Configures development tools and dependencies
+
+2. **Container creation**
+   - Mounts workspace folder from host to `/workspace/turtlebot3_ws`
+   - Forwards ports 6080 (noVNC) and 5901 (VNC)
+   - Configures GPU access via `/dev/dri` device
+   - Sets environment variables
+
+### Post-create phase
+
+The `post-create.sh` script runs once when the container is first created:
+
+1. **GPU detection**: Tests for hardware acceleration using `glxinfo`
+2. **Environment setup**: Configures `.bashrc` with ROS2 sourcing
+3. **Repository cloning**: Downloads TurtleBot3 packages from GitHub
+   - DynamixelSDK (motor control)
+   - turtlebot3_msgs (message definitions)
+   - turtlebot3 (core packages)
+   - turtlebot3_simulations (Gazebo integration)
+4. **Dependency installation**: Runs `rosdep` to install package dependencies
+5. **Alias configuration**: Adds shortcuts like `tb3_empty`, `tb3_teleop`
+
+<Tip>
+The post-create script automatically detects GPU capabilities and enables software rendering if hardware acceleration is unavailable.
+</Tip>
+
+### Post-start phase
+
+The `post-start.sh` script runs every time the container starts:
+
+1. **Package verification**: Confirms TurtleBot3 packages exist
+2. **Workspace build**: Compiles all packages with `colcon build`
+3. **Build verification**: Tests that packages are available via `ros2 pkg list`
+4. **Quick start display**: Shows available commands
+
+## Network architecture
+
+The container uses `--network=host` mode, allowing direct access to host network interfaces. This simplifies ROS2 discovery and port management.
+
+### Port forwarding
+
+- **6080**: noVNC web interface (auto-opens in browser)
+- **5901**: VNC server for native VNC clients
+
+### ROS2 network settings
+
+```bash
+ROS_DOMAIN_ID=30              # Network isolation
+RMW_IMPLEMENTATION=rmw_cyclonedds_cpp  # DDS middleware
+```
+
+<Note>
+CycloneDDS is used instead of the default FastDDS for better performance and reliability in containerized environments.
+</Note>
+
+## Resource management
+
+The container is configured with specific resource allocations:
+
+- **Shared memory**: 2GB (`--shm-size=2gb`) for ROS2 message passing
+- **Privileged mode**: Required for GPU access and hardware devices
+- **GPU device**: `/dev/dri` mounted for OpenGL acceleration
+
+### GPU handling
+
+The system supports three rendering modes:
+
+1. **Hardware acceleration**: Direct GPU access (best performance)
+2. **Software rendering**: CPU-based OpenGL (compatibility fallback)
+3. **Automatic detection**: `post-create.sh` selects appropriate mode
+
+## Workspace structure
+
+The ROS2 workspace follows standard colcon conventions:
+
+```
+/workspace/turtlebot3_ws/
+├── src/           # Source packages (version controlled)
+├── build/         # Compilation artifacts (ephemeral)
+├── install/       # Installed binaries and libraries (ephemeral)
+└── log/           # Build logs (ephemeral)
+```
+
+Only the `src/` directory and workspace root configuration files are persisted to the host filesystem.
+
+## Extension points
+
+The architecture is designed to be extensible:
+
+- **Custom packages**: Add to `src/` directory and rebuild
+- **Additional sensors**: Install ROS2 packages via apt or source
+- **Different robot models**: Change `TURTLEBOT3_MODEL` environment variable
+- **Modified environments**: Edit launch files in TurtleBot3 packages
+
+<Info>
+All changes to source code are immediately reflected on the host filesystem due to bind mounting.
+</Info>

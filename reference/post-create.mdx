@@ -1,0 +1,312 @@
+---
+title: post-create.sh
+description: Detailed documentation of the post-create.sh script
+---
+
+## Overview
+
+The `post-create.sh` script performs one-time initialization when the development container is first created. It sets up the ROS2 environment, clones TurtleBot3 repositories, and configures user settings.
+
+**Location**: `.devcontainer/post-create.sh`
+
+**Execution**: Automatically run by `postCreateCommand` in devcontainer.json
+
+**Runtime**: Approximately 1-2 minutes (depends on network speed)
+
+## Script structure
+
+### Initialization
+
+```bash
+#!/bin/bash
+set -e
+
+echo "=========================================="
+echo "Post-create: Setting up TurtleBot3 Jazzy"
+echo "=========================================="
+```
+
+Sets strict error handling and displays banner.
+
+### GPU detection
+
+```bash
+echo "Detecting graphics capabilities..."
+if command -v glxinfo &> /dev/null; then
+    if glxinfo | grep -q "direct rendering: Yes"; then
+        echo "[OK] Hardware GPU acceleration available"
+        USE_SOFTWARE_RENDERING=false
+    else
+        echo "[WARNING] No hardware GPU acceleration detected"
+        echo "[INFO] Will use software rendering for stability"
+        USE_SOFTWARE_RENDERING=true
+    fi
+else
+    echo "[WARNING] Cannot detect GPU - will use software rendering"
+    USE_SOFTWARE_RENDERING=true
+fi
+```
+
+**Purpose**: Detects if hardware GPU acceleration is available
+
+**Behavior**:
+- Checks if `glxinfo` is available
+- Tests for direct rendering support
+- Sets `USE_SOFTWARE_RENDERING` flag for later use
+- Defaults to software rendering if detection fails
+
+### ROS2 environment setup
+
+```bash
+source /opt/ros/jazzy/setup.bash
+```
+
+Sources the base ROS2 Jazzy installation for use during setup.
+
+### Bashrc configuration
+
+The script appends comprehensive configuration to `~/.bashrc`:
+
+#### ROS2 setup
+
+```bash
+cat >> ~/.bashrc << 'BASHRC_EOF'
+
+# ROS2 Jazzy setup
+source /opt/ros/jazzy/setup.bash
+if [ -f /workspace/turtlebot3_ws/install/setup.bash ]; then
+    source /workspace/turtlebot3_ws/install/setup.bash
+fi
+
+# Environment variables
+export ROS_DOMAIN_ID=30
+export TURTLEBOT3_MODEL=burger
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export GZ_VERSION=harmonic
+export QT_QPA_PLATFORM=xcb
+
+BASHRC_EOF
+```
+
+**Configuration details**:
+- Sources ROS2 Jazzy on every shell startup
+- Sources workspace overlay if built
+- Sets ROS_DOMAIN_ID to 30 (isolates network traffic)
+- Configures TurtleBot3 Burger as default model
+- Uses CycloneDDS as DDS implementation
+- Sets Gazebo Harmonic as simulator version
+
+#### Software rendering fallback
+
+```bash
+if [ "$USE_SOFTWARE_RENDERING" = true ]; then
+    cat >> ~/.bashrc << 'BASHRC_EOF'
+# Software rendering (for GPU compatibility)
+export LIBGL_ALWAYS_SOFTWARE=1
+echo "[INFO] Using software rendering for Gazebo (GPU not available)"
+BASHRC_EOF
+fi
+```
+
+Adds software rendering configuration if GPU not detected.
+
+#### Bash aliases
+
+```bash
+cat >> ~/.bashrc << 'BASHRC_EOF'
+
+# Useful aliases
+alias cb='cd /workspace/turtlebot3_ws && colcon build --symlink-install'
+alias sb='source /workspace/turtlebot3_ws/install/setup.bash'
+alias tb3_empty='ros2 launch turtlebot3_gazebo empty_world.launch.py'
+alias tb3_world='ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py'
+alias tb3_house='ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py'
+alias tb3_teleop='ros2 run turtlebot3_teleop teleop_keyboard'
+alias tb3_slam='ros2 launch turtlebot3_cartographer cartographer.launch.py use_sim_time:=True'
+alias tb3_nav='ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/my_map.yaml'
+
+# Gazebo with software rendering fallback
+alias tb3_empty_sw='LIBGL_ALWAYS_SOFTWARE=1 ros2 launch turtlebot3_gazebo empty_world.launch.py'
+alias tb3_world_sw='LIBGL_ALWAYS_SOFTWARE=1 ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py'
+alias tb3_house_sw='LIBGL_ALWAYS_SOFTWARE=1 ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py'
+BASHRC_EOF
+```
+
+See [Aliases](/reference/aliases) for complete documentation.
+
+### Workspace permissions
+
+```bash
+sudo chown -R $(whoami):$(whoami) /workspace/turtlebot3_ws
+mkdir -p /workspace/turtlebot3_ws/src
+```
+
+Ensures correct ownership and creates source directory.
+
+### Repository cloning
+
+```bash
+cd /workspace/turtlebot3_ws/src
+
+# Check if repositories exist AND have content
+NEED_CLONE=false
+
+if [ ! -d "turtlebot3" ]; then
+    NEED_CLONE=true
+    echo "TurtleBot3 directory not found"
+elif [ ! -f "turtlebot3/turtlebot3/package.xml" ]; then
+    NEED_CLONE=true
+    echo "TurtleBot3 directory exists but is empty - will re-clone"
+    rm -rf DynamixelSDK turtlebot3 turtlebot3_msgs turtlebot3_simulations
+fi
+
+if [ "$NEED_CLONE" = true ]; then
+    echo "Cloning TurtleBot3 repositories..."
+    
+    git clone -b jazzy https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+    git clone -b jazzy https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
+    git clone -b jazzy https://github.com/ROBOTIS-GIT/turtlebot3.git
+    git clone -b jazzy https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+    
+    echo "[OK] Repositories cloned"
+else
+    echo "[OK] TurtleBot3 repositories already exist with content"
+fi
+```
+
+**Features**:
+- Intelligent detection of existing repositories
+- Validates content by checking for package.xml
+- Idempotent: safe to run multiple times
+- Clones Jazzy branch from official ROBOTIS repositories
+
+**Repositories cloned**:
+1. **DynamixelSDK**: Motor control SDK
+2. **turtlebot3_msgs**: Message definitions
+3. **turtlebot3**: Core packages
+4. **turtlebot3_simulations**: Gazebo simulation
+
+### Package verification
+
+```bash
+cd /workspace/turtlebot3_ws
+PACKAGE_COUNT=$(find src/ -name "package.xml" 2>/dev/null | wc -l)
+echo "Verified $PACKAGE_COUNT package.xml files"
+```
+
+Counts and reports the number of ROS2 packages found.
+
+### Dependency management
+
+```bash
+# Initialize rosdep if not already done
+if [ ! -f /etc/ros/rosdep/sources.list.d/20-default.list ]; then
+    echo "Initializing rosdep..."
+    sudo rosdep init || true
+fi
+
+# Update rosdep
+echo "Updating rosdep..."
+rosdep update
+
+# Install dependencies
+echo "Installing dependencies..."
+rosdep install --from-paths src --ignore-src -r -y || true
+```
+
+**Steps**:
+1. Initialize rosdep database (if not done)
+2. Update rosdep package lists
+3. Install all package dependencies from src/
+
+**Flags**:
+- `--from-paths src`: Scan src/ directory
+- `--ignore-src`: Don't install packages we're building
+- `-r`: Continue on error
+- `-y`: Answer yes to prompts
+
+### Additional setup
+
+#### Maps directory
+
+```bash
+mkdir -p ~/maps
+```
+
+Creates directory for storing SLAM maps.
+
+#### GPU info file
+
+```bash
+cat > ~/GPU_INFO.txt << 'EOF'
+GPU Detection Results
+=====================
+
+EOF
+
+if command -v glxinfo &> /dev/null; then
+    echo "GPU Vendor: $(glxinfo | grep "OpenGL vendor" || echo "Unknown")" >> ~/GPU_INFO.txt
+    echo "GPU Renderer: $(glxinfo | grep "OpenGL renderer" || echo "Unknown")" >> ~/GPU_INFO.txt
+    echo "Direct Rendering: $(glxinfo | grep "direct rendering" || echo "Unknown")" >> ~/GPU_INFO.txt
+else
+    echo "glxinfo not available" >> ~/GPU_INFO.txt
+fi
+
+echo "" >> ~/GPU_INFO.txt
+echo "If Gazebo crashes, try: tb3_empty_sw (software rendering)" >> ~/GPU_INFO.txt
+```
+
+Generates a helpful GPU information file at `~/GPU_INFO.txt` with:
+- GPU vendor and renderer information
+- Direct rendering status
+- Troubleshooting hint for Gazebo crashes
+
+### Completion message
+
+```bash
+echo "=========================================="
+echo "[OK] Post-create setup complete!"
+if [ "$USE_SOFTWARE_RENDERING" = true ]; then
+    echo "[INFO] Software rendering enabled (see ~/GPU_INFO.txt)"
+fi
+echo "=========================================="
+```
+
+## Exit behavior
+
+- **Success**: Exits with code 0
+- **Failure**: Exits with non-zero code (due to `set -e`)
+
+## Files modified
+
+- `~/.bashrc`: Appended with ROS2 configuration and aliases
+- `~/GPU_INFO.txt`: Created with GPU information
+- `~/maps/`: Directory created
+- `/workspace/turtlebot3_ws/src/`: Repositories cloned
+
+## Troubleshooting
+
+### Script fails during repository cloning
+
+**Cause**: Network issues or rate limiting
+
+**Solution**: Re-run the script manually:
+```bash
+bash /workspace/turtlebot3_ws/.devcontainer/post-create.sh
+```
+
+### Dependencies fail to install
+
+**Cause**: Missing or outdated rosdep entries
+
+**Solution**: Update rosdep and retry:
+```bash
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+### Software rendering always enabled
+
+**Cause**: GPU not properly passed to container
+
+**Solution**: Check Docker GPU configuration and restart container

@@ -1,0 +1,130 @@
+---
+title: Performance optimization
+description: Fix slow performance and optimize container resource usage
+---
+
+Improve container and simulation performance when experiencing slowdowns.
+
+## Slow performance
+
+**Symptoms:**
+- Container builds very slowly
+- Gazebo lags severely
+- High CPU/memory usage
+
+<Warning>
+Inadequate resource allocation is the most common cause of poor performance. Ensure Docker has access to sufficient CPU and memory.
+</Warning>
+
+### Allocate more resources
+
+<Accordion title="Docker Desktop (Windows/Mac)">
+  <Steps>
+    <Step title="Open Docker Desktop settings">
+      Docker Desktop → Settings → Resources
+    </Step>
+    
+    <Step title="Adjust resources">
+      Recommended settings:
+      - CPUs: 4-6 cores
+      - Memory: 8-16 GB
+      - Disk: 50 GB+
+    </Step>
+    
+    <Step title="Apply changes">
+      Click "Apply & Restart"
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Linux">
+  Resources are not limited by default on Linux. Check system availability:
+  
+  ```bash
+  # Check CPU usage
+  top
+  
+  # Check memory usage
+  free -h
+  
+  # Check disk I/O
+  iostat -x 1
+  ```
+</Accordion>
+
+### Use software rendering
+
+If GPU acceleration is causing issues or isn't available:
+
+```bash
+export LIBGL_ALWAYS_SOFTWARE=1
+tb3_empty
+```
+
+This forces Mesa to use software rendering instead of GPU acceleration. While slower, it's more compatible.
+
+### Optimize Docker on Windows
+
+<Steps>
+  <Step title="Enable WSL 2">
+    - Docker Desktop → Settings → General
+    - Enable "Use WSL 2 based engine"
+  </Step>
+  
+  <Step title="Restart Docker">
+    Click "Apply & Restart"
+  </Step>
+</Steps>
+
+WSL 2 provides significantly better performance than Hyper-V on Windows.
+
+### Optimize Docker on macOS
+
+<Steps>
+  <Step title="Enable VirtioFS">
+    - Docker Desktop → Settings → General
+    - Enable "Use VirtioFS for file sharing"
+  </Step>
+  
+  <Step title="Apply changes">
+    Click "Apply & Restart"
+  </Step>
+</Steps>
+
+VirtioFS provides faster file sharing between host and container.
+
+### Clean build cache
+
+Stale build artifacts can slow down the workspace:
+
+```bash
+cd /workspace/turtlebot3_ws
+rm -rf build install log
+colcon build --symlink-install
+```
+
+## Gazebo-specific performance
+
+For Gazebo simulation performance issues:
+
+1. **Reduce physics update rate** by modifying world files
+2. **Disable shadows and anti-aliasing** in Gazebo settings
+3. **Use simpler world models** (tb3_empty instead of tb3_house)
+4. **Close RViz2** when not needed for visualization
+
+## Disk I/O performance
+
+If disk operations are slow:
+
+1. **Don't use network drives** for the workspace
+2. **Disable real-time antivirus scanning** for Docker directories
+3. **Use SSD storage** instead of HDD if possible
+4. **Reduce Docker Desktop disk image size** if it's grown very large
+
+## Container startup performance
+
+If the container takes a long time to start:
+
+1. The post-start script rebuilds the workspace on every start
+2. Consider commenting out the build step in `.devcontainer/post-start.sh` if you don't need automatic rebuilds
+3. Build manually only when needed with the `cb` alias

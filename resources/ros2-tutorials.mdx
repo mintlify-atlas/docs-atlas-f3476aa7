@@ -1,0 +1,65 @@
+---
+title: ROS2 tutorials
+description: Essential learning resources for ROS2 Jazzy development
+---
+
+Explore comprehensive tutorials and documentation to master ROS2 development with the TurtleBot3 platform.
+
+## Official documentation
+
+<CardGroup cols={2}>
+  <Card title="ROS2 Jazzy Documentation" icon="book" href="https://docs.ros.org/en/jazzy/">
+    Complete ROS2 reference with API documentation, tutorials, and guides
+  </Card>
+  
+  <Card title="Navigation2 Tutorials" icon="compass" href="https://docs.nav2.org/">
+    Autonomous navigation guide for implementing SLAM and path planning
+  </Card>
+</CardGroup>
+
+## Core concepts
+
+<Info>
+  Start with the basics of ROS2 nodes, topics, and services before diving into advanced navigation and SLAM features.
+</Info>
+
+### Getting started
+
+The ROS2 Jazzy documentation covers:
+- **Nodes and Topics**: Understanding the fundamental building blocks of ROS2 applications
+- **Services and Actions**: Implementing synchronous and asynchronous communication patterns
+- **Launch Files**: Orchestrating complex multi-node systems
+- **Parameters**: Configuring node behavior dynamically
+
+### Navigation stack
+
+Navigation2 provides:
+- **Behavior Trees**: Flexible task execution framework
+- **Path Planning**: Multiple planner algorithms (NavFn, Smac, TEB)
+- **Controller Algorithms**: DWB, TEB, and Regulated Pure Pursuit controllers
+- **Recovery Behaviors**: Handling navigation failures gracefully
+
+## Advanced topics
+
+<CardGroup cols={2}>
+  <Card title="SLAM with Cartographer" icon="map" href="https://google-cartographer-ros.readthedocs.io/">
+    Learn how to build maps of unknown environments using Cartographer SLAM
+  </Card>
+  
+  <Card title="ROS2 Best Practices" icon="code" href="https://docs.ros.org/en/jazzy/Contributing.html">
+    Follow coding standards and design patterns for maintainable ROS2 code
+  </Card>
+</CardGroup>
+
+## Hands-on practice
+
+Use your dev container environment to practice:
+
+1. **Basic teleoperation**: Control the TurtleBot3 using keyboard commands
+2. **SLAM mapping**: Create maps of simulated environments
+3. **Autonomous navigation**: Set navigation goals and observe path planning
+4. **Custom nodes**: Build your own ROS2 packages for robot control
+
+<Info>
+  All tutorials can be tested directly in your Gazebo simulation environment without needing physical hardware.
+</Info>

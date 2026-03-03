@@ -1,122 +1,139 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "TurtleBot3 ROS2 Jazzy Dev Container",
+  "theme": "aspen",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#1976d2",
+    "light": "#42a5f5",
+    "dark": "#0d47a1"
   },
-  "favicon": "/favicon.svg",
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/prakash-aryan/turtlebot3_jazzy_devcontainer"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/prakash-aryan/turtlebot3_jazzy_devcontainer"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Getting Started",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "prerequisites",
+              "installation",
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "concepts/architecture",
+              "concepts/technology-stack",
+              "concepts/dev-containers",
+              "concepts/data-persistence"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Usage",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
+              "usage/quick-launch",
+              "usage/simulation-worlds",
+              "usage/teleoperation",
+              "usage/slam-mapping",
+              "usage/autonomous-navigation"
             ]
           },
           {
-            "group": "AI tools",
+            "group": "Configuration",
             "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "configuration/container-resources",
+              "configuration/robot-models",
+              "configuration/environment-variables",
+              "configuration/vnc-settings"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/workspace-structure",
+              "development/building-workspace",
+              "development/creating-packages",
+              "development/debugging",
+              "development/version-control"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Project Structure",
             "pages": [
-              "api-reference/introduction"
+              "reference/directory-layout",
+              "reference/configuration-files",
+              "reference/scripts"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Scripts",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "reference/post-create",
+              "reference/post-start",
+              "reference/verify-setup"
+            ]
+          },
+          {
+            "group": "Commands & Aliases",
+            "pages": [
+              "reference/aliases",
+              "reference/ros2-commands",
+              "reference/colcon-commands"
+            ]
+          },
+          {
+            "group": "Troubleshooting",
+            "pages": [
+              "troubleshooting/docker-issues",
+              "troubleshooting/container-build",
+              "troubleshooting/port-network",
+              "troubleshooting/performance",
+              "troubleshooting/vnc-display",
+              "troubleshooting/gazebo-issues",
+              "troubleshooting/ros2-issues"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Resources",
+        "groups": [
+          {
+            "group": "Learning",
+            "pages": [
+              "resources/ros2-tutorials",
+              "resources/turtlebot3-manual",
+              "resources/gazebo-docs",
+              "resources/community"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/guidelines",
+              "contributing/development-setup"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

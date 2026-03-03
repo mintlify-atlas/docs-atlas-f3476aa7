@@ -1,0 +1,393 @@
+---
+title: Autonomous navigation
+description: Navigate autonomously using Nav2 with pre-built maps
+---
+
+Autonomous navigation enables the TurtleBot3 to navigate to goal positions without manual control. Using Navigation2 (Nav2) with a pre-built map, the robot plans paths, avoids obstacles, and reaches destinations autonomously.
+
+## Prerequisites
+
+Before using autonomous navigation, you must have:
+
+1. **A saved map**: Create a map using SLAM first
+2. **Map files**: Both `.pgm` and `.yaml` files in `~/maps/`
+3. **Matching simulation world**: Use the same world where you created the map
+
+<Note>
+You cannot navigate autonomously without a map. Complete the SLAM mapping process first before attempting navigation.
+</Note>
+
+## Starting Navigation2
+
+### Using the alias
+
+The pre-configured alias starts Navigation2 with your saved map:
+
+```bash
+tb3_nav
+```
+
+This alias expects your map at `~/maps/my_map.yaml`.
+
+### Using the full command
+
+For more control or different map locations:
+
+```bash
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/my_map.yaml
+```
+
+<Tip>
+Replace `my_map.yaml` with your actual map filename:
+```bash
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/turtlebot3_world.yaml
+```
+</Tip>
+
+## Complete navigation workflow
+
+<Steps>
+  <Step title="Launch simulation">
+    Start the same world you used for mapping:
+    ```bash
+    tb3_world
+    ```
+    The simulation environment must match your saved map.
+  </Step>
+  
+  <Step title="Start Navigation2">
+    In a second terminal, launch Nav2 with your map:
+    ```bash
+    ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/turtlebot3_world.yaml
+    ```
+    RViz2 will open automatically showing your map.
+  </Step>
+  
+  <Step title="Access RViz2">
+    Open the VNC desktop in your browser:
+    ```
+    http://localhost:6080
+    ```
+    Password: `ros`
+  </Step>
+  
+  <Step title="Set initial pose">
+    In RViz2:
+    - Click the "2D Pose Estimate" button in the toolbar
+    - Click on the map where the robot is currently located
+    - Drag to set the robot's orientation
+    - Release the mouse button
+  </Step>
+  
+  <Step title="Set navigation goal">
+    In RViz2:
+    - Click the "Navigation2 Goal" button in the toolbar
+    - Click on your desired destination on the map
+    - Drag to set the desired final orientation
+    - Release the mouse button
+  </Step>
+  
+  <Step title="Watch autonomous navigation">
+    The robot will:
+    - Plan a path to the goal (shown as a green line)
+    - Start moving autonomously
+    - Avoid obstacles dynamically
+    - Navigate to the destination
+  </Step>
+</Steps>
+
+## Using RViz2 for navigation
+
+### Initial pose estimation
+
+Telling Nav2 where the robot is located on the map.
+
+**Steps:**
+1. Click **"2D Pose Estimate"** button (top toolbar)
+2. Click on the map at the robot's current location
+3. Drag the arrow to match the robot's orientation
+4. Release to set the pose
+
+**Visual feedback:**
+- Green particle cloud appears around the robot
+- Particles should converge to a tight cluster
+- If particles are spread out, your pose estimate is inaccurate
+
+<Tip>
+Compare the robot's position in Gazebo with the map in RViz2 to accurately set the initial pose.
+</Tip>
+
+### Setting navigation goals
+
+Telling the robot where to go.
+
+**Steps:**
+1. Click **"Navigation2 Goal"** button (top toolbar)
+2. Click on your desired destination on the map
+3. Drag to set the final orientation you want
+4. Release to start navigation
+
+**What happens:**
+- Nav2 computes a global path (green line)
+- Robot begins moving toward the goal
+- Local planner adjusts for dynamic obstacles
+- Robot stops when goal is reached
+
+### Monitoring navigation
+
+**In RViz2, watch:**
+- **Global path** (green line): Planned route to goal
+- **Local costmap** (colored grid around robot): Obstacle awareness
+- **Robot footprint** (small square): Robot's physical size
+- **Laser scan** (red dots): Real-time sensor data
+
+**Navigation status:**
+- Robot moving: Navigation is active
+- Robot stopped at goal: Success!
+- Robot oscillating: Path planning difficulty
+- Robot stopped mid-path: Obstacle blocking or navigation failure
+
+## Workflow examples
+
+### Navigate in TurtleBot3 world
+
+**Terminal 1: Launch world**
+```bash
+tb3_world
+```
+
+**Terminal 2: Start navigation**
+```bash
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/turtlebot3_world.yaml
+```
+
+**In RViz2 (VNC browser at http://localhost:6080):**
+1. Set initial pose where robot starts
+2. Click Navigation2 Goal
+3. Choose a destination across the map
+4. Watch the robot navigate autonomously
+
+### Navigate in house environment
+
+**Terminal 1: Launch house**
+```bash
+tb3_house
+```
+
+**Terminal 2: Start navigation**
+```bash
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/house_complete.yaml
+```
+
+**In RViz2:**
+1. Set initial pose in the starting room
+2. Set navigation goal in a different room
+3. Watch the robot navigate through doorways autonomously
+
+## Best practices
+
+### Accurate initial pose
+
+**Critical for success:**
+- Look at robot position in Gazebo
+- Match that position on the RViz2 map
+- Align the arrow with robot's facing direction
+- If navigation fails, reset the initial pose
+
+**Verification:**
+- Particle cloud should be tight and small
+- Laser scan should align with map walls
+- Robot's position should match Gazebo
+
+### Choosing good goals
+
+**Select destinations that:**
+- Are in open, free space (white areas on map)
+- Have clear paths from current location
+- Avoid narrow passages for first attempts
+- Are reachable without complex maneuvering
+
+**Avoid goals that:**
+- Are in or near obstacles (black areas)
+- Require passing through very narrow spaces
+- Are in unknown areas (gray on map)
+
+### Dealing with navigation failures
+
+**If the robot stops moving:**
+
+<Steps>
+  <Step title="Check the goal">
+    Ensure the goal is in free space, not inside an obstacle or too close to walls.
+  </Step>
+  
+  <Step title="Reset initial pose">
+    The robot may have lost localization. Set a new initial pose estimate.
+  </Step>
+  
+  <Step title="Choose closer goal">
+    Try a shorter navigation distance first, then navigate to the original goal in steps.
+  </Step>
+  
+  <Step title="Check for obstacles">
+    Verify nothing is blocking the path in Gazebo.
+  </Step>
+</Steps>
+
+## Understanding Nav2 behavior
+
+### Path planning
+
+Nav2 uses two planners:
+
+**Global planner:**
+- Plans overall route from start to goal
+- Uses the static map
+- Shown as green line in RViz2
+- Computed once per goal
+
+**Local planner:**
+- Adjusts path in real-time
+- Avoids dynamic obstacles
+- Follows global path while avoiding collisions
+- Continuously updated
+
+### Costmaps
+
+Nav2 uses costmaps to represent obstacle information:
+
+**Global costmap:**
+- Based on your saved map
+- Covers entire environment
+- Static obstacles
+
+**Local costmap:**
+- Small area around robot
+- Updated with live sensor data
+- Detects dynamic obstacles
+- Shown as colored grid in RViz2
+
+### Recovery behaviors
+
+If navigation gets stuck, Nav2 automatically tries:
+1. **Rotation**: Spin in place to find a path
+2. **Backing up**: Move backward to escape tight spots
+3. **Clear costmap**: Reset obstacle information and retry
+
+## Troubleshooting
+
+### Robot won't move
+
+<Steps>
+  <Step title="Check initial pose">
+    Set a new initial pose estimate. Incorrect pose prevents navigation.
+  </Step>
+  
+  <Step title="Verify goal location">
+    Ensure goal is in free space (white area), not in obstacles (black).
+  </Step>
+  
+  <Step title="Check simulation">
+    Verify Gazebo simulation is running and robot is loaded:
+    ```bash
+    ros2 node list | grep turtlebot3
+    ```
+  </Step>
+  
+  <Step title="Restart navigation">
+    Stop Nav2 (Ctrl+C) and relaunch:
+    ```bash
+    ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/my_map.yaml
+    ```
+  </Step>
+</Steps>
+
+### Map doesn't match environment
+
+**Cause**: Using a map from a different world.
+
+**Solution**:
+- Always use the map created for the current simulation world
+- If you're in `tb3_world`, use the map created when you explored `tb3_world`
+- Re-create the map if you've modified the environment
+
+### Robot gets stuck
+
+<Steps>
+  <Step title="Cancel current goal">
+    In RViz2, set a new goal in an easier location.
+  </Step>
+  
+  <Step title="Use teleoperation">
+    Temporarily control the robot manually:
+    ```bash
+    tb3_teleop
+    ```
+    Move to open space, then restart navigation.
+  </Step>
+  
+  <Step title="Adjust goal">
+    Set a goal in more open space, away from obstacles.
+  </Step>
+</Steps>
+
+### Poor navigation performance
+
+**Symptoms:**
+- Robot takes inefficient paths
+- Excessive oscillation
+- Frequent recovery behaviors
+
+**Solutions:**
+- Create a higher quality map with SLAM (drive slower during mapping)
+- Ensure initial pose is very accurate
+- Choose goals in open areas
+- Adjust Nav2 parameters for your environment (advanced)
+
+### RViz2 not showing map
+
+<Steps>
+  <Step title="Verify map file exists">
+    ```bash
+    ls -lh ~/maps/my_map.*
+    ```
+    Both `.pgm` and `.yaml` files must be present.
+  </Step>
+  
+  <Step title="Check map path">
+    Ensure the path in your launch command is correct:
+    ```bash
+    ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/my_map.yaml
+    ```
+  </Step>
+  
+  <Step title="Verify map topic">
+    ```bash
+    ros2 topic list | grep map
+    ros2 topic echo /map --once
+    ```
+  </Step>
+</Steps>
+
+## Advanced navigation
+
+### Multi-goal navigation
+
+Navigate to multiple points sequentially:
+1. Set first goal and wait for completion
+2. Set second goal and wait
+3. Continue for each destination
+
+### Waypoint following
+
+Nav2 supports waypoint following through the Nav2 Waypoint Follower for complex routes.
+
+### Parameter tuning
+
+Advanced users can tune Nav2 parameters:
+- Planner settings
+- Controller gains
+- Costmap configurations
+- Recovery behavior thresholds
+
+Parameters are configured in Navigation2 launch files and configuration YAML files.

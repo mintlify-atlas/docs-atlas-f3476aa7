@@ -1,0 +1,166 @@
+---
+title: Gazebo issues
+description: Fix Gazebo startup failures, crashes, and missing robot models
+---
+
+Troubleshoot Gazebo Harmonic simulator issues in the TurtleBot3 environment.
+
+## Gazebo won't start
+
+**Symptoms:**
+- `tb3_empty` command does nothing
+- Error messages in terminal
+
+<Accordion title="Kill existing Gazebo processes">
+  Old Gazebo processes may prevent new ones from starting:
+  
+  ```bash
+  pkill -9 gz
+  pkill -9 gzserver
+  pkill -9 gzclient
+  tb3_empty
+  ```
+</Accordion>
+
+<Accordion title="Check GPU/graphics support">
+  Test if OpenGL rendering is working:
+  
+  ```bash
+  # Test OpenGL
+  glxinfo | grep "direct rendering"
+  # Should say "Yes"
+  ```
+  
+  If it says "No", use software rendering:
+  ```bash
+  export LIBGL_ALWAYS_SOFTWARE=1
+  tb3_empty
+  ```
+</Accordion>
+
+<Accordion title="Verify TURTLEBOT3_MODEL environment variable">
+  ```bash
+  echo $TURTLEBOT3_MODEL
+  # Should output: burger
+  
+  # Set if empty:
+  export TURTLEBOT3_MODEL=burger
+  ```
+  
+  This variable must be set for TurtleBot3 launch files to work.
+</Accordion>
+
+<Accordion title="Launch with verbose output">
+  See detailed error messages:
+  
+  ```bash
+  ros2 launch turtlebot3_gazebo empty_world.launch.py --verbose
+  ```
+  
+  This shows all ROS2 node output and can help identify the specific failure.
+</Accordion>
+
+## No robot model in Gazebo
+
+**Symptoms:**
+- Gazebo opens but is empty
+- No TurtleBot3 appears
+
+<Warning>
+The TURTLEBOT3_MODEL environment variable must be set for the robot to spawn. Always verify this first.
+</Warning>
+
+<Steps>
+  <Step title="Verify model variable">
+    ```bash
+    echo $TURTLEBOT3_MODEL
+    # Must output: burger, waffle, or waffle_pi
+    
+    export TURTLEBOT3_MODEL=burger
+    ```
+  </Step>
+  
+  <Step title="Check package installation">
+    ```bash
+    ros2 pkg list | grep turtlebot3
+    
+    # If missing packages, rebuild:
+    cd /workspace/turtlebot3_ws
+    colcon build --symlink-install
+    source install/setup.bash
+    ```
+  </Step>
+  
+  <Step title="Source workspace">
+    ```bash
+    source /opt/ros/jazzy/setup.bash
+    source /workspace/turtlebot3_ws/install/setup.bash
+    # Or use: sb
+    ```
+  </Step>
+</Steps>
+
+## Gazebo crashes
+
+If Gazebo crashes or closes unexpectedly:
+
+<Accordion title="Use software rendering">
+  GPU acceleration issues can cause crashes:
+  
+  ```bash
+  export LIBGL_ALWAYS_SOFTWARE=1
+  tb3_empty
+  ```
+</Accordion>
+
+<Accordion title="Check Gazebo logs">
+  Examine log files for error details:
+  
+  ```bash
+  cat ~/.gz/gazebo/server.log
+  cat ~/.gz/gazebo/client.log
+  cat /workspace/turtlebot3_ws/log/latest*/events.log
+  ```
+</Accordion>
+
+<Accordion title="Clear Gazebo cache">
+  Corrupted cache can cause crashes:
+  
+  ```bash
+  rm -rf ~/.gz/
+  tb3_empty
+  ```
+  
+  This removes all Gazebo configuration and cache files. They'll be regenerated on next launch.
+</Accordion>
+
+## Gazebo performance issues
+
+See the [Performance optimization](/troubleshooting/performance) guide for Gazebo-specific performance tips.
+
+Key solutions:
+- Allocate more resources to Docker
+- Use simpler worlds (tb3_empty vs tb3_house)
+- Enable software rendering if GPU acceleration is unstable
+- Disable shadows and reduce graphics quality in Gazebo settings
+
+## ROS-Gazebo bridge issues
+
+If Gazebo runs but ROS2 topics aren't available:
+
+```bash
+# Check if bridge node is running
+ros2 node list | grep bridge
+
+# Verify topics are published
+ros2 topic list
+
+# Check for error messages in bridge node
+ros2 node info /ros_gz_bridge
+```
+
+If the bridge isn't running, check that `ros-jazzy-ros-gz` packages are installed:
+
+```bash
+sudo apt install ros-jazzy-ros-gz
+```

@@ -1,0 +1,213 @@
+---
+title: Configuration files
+description: Overview of Dockerfile and devcontainer.json configuration
+---
+
+## Dockerfile
+
+The Dockerfile defines the container image based on the official ROS2 Jazzy Desktop Full image.
+
+### Base image
+
+```dockerfile
+FROM osrf/ros:jazzy-desktop-full-noble
+```
+
+Builds on top of Ubuntu 24.04 (Noble) with ROS2 Jazzy Desktop Full pre-installed.
+
+### Environment variables
+
+```dockerfile
+ENV DEBIAN_FRONTEND=noninteractive
+ENV ROS_DISTRO=jazzy
+ENV GZ_VERSION=harmonic
+```
+
+### Key components installed
+
+#### Build tools
+- Python 3 with pip
+- colcon (ROS2 build tool)
+- rosdep (dependency management)
+- vcstool (repository management)
+- argcomplete (shell completion)
+- build-essential
+- git, vim, wget, curl
+
+#### Gazebo Harmonic
+- Gazebo Harmonic simulator
+- ROS2-Gazebo bridge (`ros-jazzy-ros-gz`)
+
+#### Navigation and SLAM
+- Navigation2 stack
+- Cartographer SLAM
+- CycloneDDS RMW implementation
+
+#### ROS2 development tools
+- RViz2 (3D visualization)
+- rqt and common plugins
+- robot_state_publisher
+- joint_state_publisher (with GUI)
+- xacro (XML macros)
+- tf2 tools
+
+#### Teleoperation
+- teleop_twist_keyboard
+- teleop_twist_joy
+
+#### Control packages
+- ros2_control
+- ros2_controllers
+- controller_manager
+
+#### Graphics support
+- Mesa utilities
+- OpenGL drivers
+- Vulkan drivers
+- X11 applications
+
+#### Python packages
+- setuptools
+- numpy
+- transforms3d
+
+### Workspace setup
+
+```dockerfile
+RUN mkdir -p /workspace/turtlebot3_ws/src
+WORKDIR /workspace/turtlebot3_ws
+```
+
+## devcontainer.json
+
+Configures VS Code and the development container environment.
+
+### Basic configuration
+
+```json
+{
+  "name": "ROS2 Jazzy TurtleBot3",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "workspaceFolder": "/workspace/turtlebot3_ws",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace/turtlebot3_ws,type=bind"
+}
+```
+
+### VS Code extensions
+
+Automatically installed extensions:
+- `ms-python.python` - Python language support
+- `ms-vscode.cpptools` - C/C++ language support
+- `ms-vscode.cmake-tools` - CMake integration
+- `twxs.cmake` - CMake syntax highlighting
+- `ms-iot.vscode-ros` - ROS development tools
+
+### VS Code settings
+
+```json
+"settings": {
+  "python.defaultInterpreterPath": "/usr/bin/python3",
+  "ros.distro": "jazzy",
+  "terminal.integrated.defaultProfile.linux": "bash"
+}
+```
+
+### Dev Container features
+
+#### Common utilities
+```json
+"ghcr.io/devcontainers/features/common-utils:2": {
+  "installZsh": false,
+  "username": "automatic",
+  "upgradePackages": false
+}
+```
+
+#### Desktop environment
+```json
+"ghcr.io/devcontainers/features/desktop-lite:1": {
+  "password": "ros",
+  "webPort": "6080",
+  "vncPort": "5901"
+}
+```
+
+Provides noVNC web-based desktop access on port 6080.
+
+### Port forwarding
+
+```json
+"forwardPorts": [6080, 5901],
+"portsAttributes": {
+  "6080": {
+    "label": "Desktop (noVNC)",
+    "onAutoForward": "openBrowser"
+  }
+}
+```
+
+- Port 6080: noVNC web interface (auto-opens in browser)
+- Port 5901: VNC server
+
+### Environment variables
+
+```json
+"remoteEnv": {
+  "DISPLAY": ":1",
+  "ROS_DOMAIN_ID": "30",
+  "TURTLEBOT3_MODEL": "burger",
+  "RMW_IMPLEMENTATION": "rmw_cyclonedds_cpp",
+  "GZ_VERSION": "harmonic",
+  "QT_QPA_PLATFORM": "xcb",
+  "LIBGL_ALWAYS_SOFTWARE": "${localEnv:LIBGL_ALWAYS_SOFTWARE:0}"
+}
+```
+
+| Variable | Value | Purpose |
+|----------|-------|----------|
+| `DISPLAY` | `:1` | X11 display for GUI applications |
+| `ROS_DOMAIN_ID` | `30` | ROS2 network domain |
+| `TURTLEBOT3_MODEL` | `burger` | Default TurtleBot3 model |
+| `RMW_IMPLEMENTATION` | `rmw_cyclonedds_cpp` | DDS implementation |
+| `GZ_VERSION` | `harmonic` | Gazebo version |
+| `QT_QPA_PLATFORM` | `xcb` | Qt platform abstraction |
+| `LIBGL_ALWAYS_SOFTWARE` | Inherited | Software rendering fallback |
+
+### Container runtime arguments
+
+```json
+"runArgs": [
+  "--network=host",
+  "--privileged",
+  "--shm-size=2gb",
+  "--device=/dev/dri:/dev/dri"
+]
+```
+
+- `--network=host`: Use host network for ROS2 communication
+- `--privileged`: Required for hardware access
+- `--shm-size=2gb`: Increased shared memory for Gazebo
+- `--device=/dev/dri`: GPU device access
+
+### Host requirements
+
+```json
+"hostRequirements": {
+  "gpu": "optional"
+}
+```
+
+GPU is optional; software rendering is used as fallback.
+
+### Lifecycle scripts
+
+```json
+"postCreateCommand": "bash /workspace/turtlebot3_ws/.devcontainer/post-create.sh",
+"postStartCommand": "bash /workspace/turtlebot3_ws/.devcontainer/post-start.sh"
+```
+
+- `postCreateCommand`: Runs once when container is first created
+- `postStartCommand`: Runs every time the container starts

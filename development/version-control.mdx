@@ -1,0 +1,249 @@
+---
+title: Git best practices for ROS2 projects
+description: Version control guidelines for managing ROS2 workspace source code
+---
+
+Learn best practices for using Git with your ROS2 workspace to track changes and collaborate effectively.
+
+## What to commit
+
+Commit these files and directories to version control:
+
+- Source code in `src/` directory
+- Configuration files
+- Custom launch files
+- Documentation files
+- Package manifests (`package.xml`)
+- Build configuration (`CMakeLists.txt`, `setup.py`)
+
+## What not to commit
+
+Do not commit these generated directories:
+
+- `build/` - Build artifacts
+- `install/` - Installed binaries
+- `log/` - Build logs
+- `.vscode/` - Workspace files (already in .gitignore)
+- Temporary files
+
+These directories are automatically excluded by the `.gitignore` file in the project.
+
+## Git workflow for custom packages
+
+### Initial setup
+
+<Steps>
+  <Step title="Navigate to workspace">
+    ```bash
+    cd /workspace/turtlebot3_ws
+    ```
+  </Step>
+
+  <Step title="Initialize Git repository">
+    If not already initialized:
+    
+    ```bash
+    git init
+    ```
+  </Step>
+
+  <Step title="Add remote repository">
+    ```bash
+    git remote add origin <your-repository-url>
+    ```
+  </Step>
+</Steps>
+
+### Committing changes
+
+<Steps>
+  <Step title="Check status">
+    ```bash
+    git status
+    ```
+    
+    Review which files have changed.
+  </Step>
+
+  <Step title="Stage changes">
+    Add specific files:
+    
+    ```bash
+    git add src/my_package/
+    ```
+    
+    Or add all changes in src:
+    
+    ```bash
+    git add src/
+    ```
+  </Step>
+
+  <Step title="Commit changes">
+    ```bash
+    git commit -m "Add custom navigation package"
+    ```
+  </Step>
+
+  <Step title="Push to remote">
+    ```bash
+    git push origin main
+    ```
+  </Step>
+</Steps>
+
+## Managing TurtleBot3 source packages
+
+The TurtleBot3 packages are cloned from upstream repositories in `post-create.sh`:
+
+```bash
+git clone -b jazzy https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+git clone -b jazzy https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git
+git clone -b jazzy https://github.com/ROBOTIS-GIT/turtlebot3.git
+git clone -b jazzy https://github.com/ROBOTIS-GIT/turtlebot3_simulations.git
+```
+
+### Working with upstream packages
+
+If you modify TurtleBot3 source packages:
+
+<Steps>
+  <Step title="Navigate to package directory">
+    ```bash
+    cd /workspace/turtlebot3_ws/src/turtlebot3
+    ```
+  </Step>
+
+  <Step title="Create a feature branch">
+    ```bash
+    git checkout -b my-feature
+    ```
+  </Step>
+
+  <Step title="Make and commit changes">
+    ```bash
+    git add .
+    git commit -m "Modify robot configuration"
+    ```
+  </Step>
+
+  <Step title="Push to your fork">
+    Fork the repository on GitHub first, then:
+    
+    ```bash
+    git remote add myfork <your-fork-url>
+    git push myfork my-feature
+    ```
+  </Step>
+</Steps>
+
+## Ignoring build artifacts
+
+The project includes a `.gitignore` file that excludes:
+
+```gitignore
+build/
+install/
+log/
+.vscode/
+```
+
+Verify ignored files:
+
+```bash
+git status --ignored
+```
+
+## Branching strategy
+
+### Feature branches
+
+Create separate branches for new features:
+
+```bash
+git checkout -b feature/autonomous-navigation
+```
+
+Develop and test your feature, then merge:
+
+```bash
+git checkout main
+git merge feature/autonomous-navigation
+```
+
+### Experiment branches
+
+For experimental work that might be discarded:
+
+```bash
+git checkout -b experiment/new-sensor
+```
+
+If the experiment fails, simply delete the branch:
+
+```bash
+git checkout main
+git branch -D experiment/new-sensor
+```
+
+## Cloning your workspace
+
+To clone your workspace on a new machine:
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone <your-repository-url> turtlebot3_jazzy_devcontainer
+    cd turtlebot3_jazzy_devcontainer
+    ```
+  </Step>
+
+  <Step title="Open in VS Code">
+    ```bash
+    code .
+    ```
+  </Step>
+
+  <Step title="Reopen in container">
+    Press F1 → "Dev Containers: Reopen in Container"
+    
+    The `post-create.sh` script will clone TurtleBot3 packages and `post-start.sh` will build the workspace automatically.
+  </Step>
+</Steps>
+
+## Handling package.xml files
+
+Package manifests should always be committed. They contain:
+
+- Package metadata
+- Dependencies
+- Maintainer information
+- License information
+
+Example commit:
+
+```bash
+git add src/my_package/package.xml
+git commit -m "Update package dependencies"
+```
+
+## Checking repository verification
+
+The `post-create.sh` script verifies package integrity:
+
+```bash
+PACKAGE_COUNT=$(find src/ -name "package.xml" 2>/dev/null | wc -l)
+echo "Verified $PACKAGE_COUNT package.xml files"
+```
+
+This ensures all packages have proper manifests before building.
+
+## Best practices summary
+
+- Commit source code frequently with descriptive messages
+- Never commit `build/`, `install/`, or `log/` directories
+- Use branches for features and experiments
+- Keep package.xml and build files in version control
+- Document changes in commit messages
+- Fork upstream packages before modifying them
+- Test builds before pushing to remote

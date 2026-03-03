@@ -1,0 +1,210 @@
+---
+title: Prerequisites
+description: Required software and system requirements for the TurtleBot3 ROS2 Jazzy Dev Container
+---
+
+## Required software
+
+Before you can use the TurtleBot3 ROS2 Jazzy Dev Container, you need to install the following software on your host machine:
+
+<CardGroup cols={3}>
+  <Card title="Docker" icon="docker">
+    Container runtime for building and running the development environment
+  </Card>
+  <Card title="VS Code" icon="code">
+    Code editor with Dev Containers extension support
+  </Card>
+  <Card title="Dev Containers" icon="box">
+    VS Code extension for working inside containers
+  </Card>
+</CardGroup>
+
+### Docker
+
+Docker is required to build and run the containerized development environment.
+
+**Windows/macOS:**
+- Download and install [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- Docker Desktop includes everything you need in a single installer
+
+**Linux:**
+- Install [Docker Engine](https://docs.docker.com/engine/install/) following the official guide for your distribution
+- Docker Compose is included with modern Docker installations
+
+<Warning>
+  On Windows, Docker Desktop requires WSL 2 (Windows Subsystem for Linux 2). The installer will help you set this up if it's not already enabled.
+</Warning>
+
+### VS Code
+
+Visual Studio Code is the recommended editor for working with dev containers.
+
+- Download from [code.visualstudio.com](https://code.visualstudio.com/)
+- Available for Windows, macOS, and Linux
+- Free and open source
+
+### Dev Containers extension
+
+The Dev Containers extension enables VS Code to work seamlessly with Docker containers.
+
+<Steps>
+  <Step title="Open VS Code">
+    Launch Visual Studio Code on your system
+  </Step>
+  <Step title="Open Extensions">
+    Click the Extensions icon in the sidebar or press `Ctrl+Shift+X` (Windows/Linux) or `Cmd+Shift+X` (macOS)
+  </Step>
+  <Step title="Search and install">
+    Search for "Dev Containers" and install the extension by Microsoft
+  </Step>
+  <Step title="Reload if needed">
+    Reload VS Code if prompted after installation
+  </Step>
+</Steps>
+
+<Note>
+  The Dev Containers extension ID is `ms-vscode-remote.remote-containers`. Make sure you install the official Microsoft extension.
+</Note>
+
+## System requirements
+
+Your computer needs sufficient resources to run Docker containers and simulate a robot environment.
+
+### Minimum requirements
+
+<Info>
+  These are the bare minimum specs. The container will run but performance may be limited.
+</Info>
+
+- **CPU**: 4 cores
+- **RAM**: 8 GB
+- **Disk Space**: 20 GB free
+- **OS**: Windows 10/11, macOS 10.15+, or any modern Linux distribution
+
+### Recommended requirements
+
+<Note>
+  These specs will provide smooth performance for development and simulation.
+</Note>
+
+- **CPU**: 6+ cores
+- **RAM**: 16 GB
+- **Disk Space**: 50 GB free
+- **GPU**: Optional but recommended for better Gazebo performance
+- **OS**: Windows 10/11, macOS 11+, or Linux with kernel 4.x+
+
+### Supported operating systems
+
+**Windows:**
+- Windows 10 version 21H2 or later
+- Windows 11 (any version)
+- WSL 2 must be enabled for Docker Desktop
+
+**macOS:**
+- macOS 10.15 (Catalina) or later
+- Both Intel and Apple Silicon (M1/M2/M3) are supported
+
+**Linux:**
+- Ubuntu 20.04, 22.04, 24.04
+- Debian 11+
+- Fedora 37+
+- Any distribution with Docker support and kernel 4.x or later
+
+## Hardware considerations
+
+### GPU support
+
+The container can use your GPU for hardware-accelerated graphics in Gazebo:
+
+- **Linux**: Native GPU support via `/dev/dri` device passthrough
+- **Windows**: Limited GPU support through WSL 2
+- **macOS**: No direct GPU support, uses software rendering
+
+<Warning>
+  If you experience graphics issues, the container automatically falls back to software rendering. You can force software rendering by setting `LIBGL_ALWAYS_SOFTWARE=1`.
+</Warning>
+
+### Disk space breakdown
+
+Here's what uses disk space in the container:
+
+- **Ubuntu 24.04 base image**: ~1 GB
+- **ROS2 Jazzy packages**: ~2 GB
+- **Gazebo Harmonic**: ~500 MB
+- **TurtleBot3 source code**: ~50 MB
+- **Build artifacts**: ~500 MB
+- **Container overhead**: ~200 MB
+
+**Total**: Approximately 4-5 GB for the container plus workspace files
+
+### Memory allocation
+
+Docker Desktop (Windows/macOS) limits container memory by default:
+
+<Steps>
+  <Step title="Open Docker Desktop settings">
+    Click the Docker icon in your system tray and select Settings
+  </Step>
+  <Step title="Navigate to Resources">
+    Go to Resources → Advanced (Windows) or Resources (macOS)
+  </Step>
+  <Step title="Adjust memory">
+    Set Memory to at least 8 GB (16 GB recommended)
+  </Step>
+  <Step title="Adjust CPUs">
+    Allocate at least 4 CPU cores (6+ recommended)
+  </Step>
+  <Step title="Apply changes">
+    Click "Apply & Restart" to save the changes
+  </Step>
+</Steps>
+
+<Info>
+  On Linux, Docker uses your system resources directly without limits. No additional configuration is needed.
+</Info>
+
+## Network requirements
+
+The container requires internet access during the initial build:
+
+- **Docker Hub**: To download the base image (`osrf/ros:jazzy-desktop-full-noble`)
+- **GitHub**: To clone TurtleBot3 repositories
+- **Ubuntu/ROS repositories**: To install packages
+- **OSRF repositories**: To install Gazebo Harmonic
+
+<Note>
+  After the initial build, the container can run offline. Only rebuilding or updating packages requires internet access.
+</Note>
+
+### Port forwarding
+
+The container forwards these ports to your host:
+
+| Port | Service | Description |
+|------|---------|-------------|
+| 6080 | noVNC | Browser-based desktop access |
+| 5901 | VNC | Direct VNC client access |
+
+<Warning>
+  If port 6080 is already in use on your system, you'll need to modify `.devcontainer/devcontainer.json` to use a different port.
+</Warning>
+
+## Verification checklist
+
+Before proceeding to installation, verify you have:
+
+- [ ] Docker installed and running
+- [ ] VS Code installed
+- [ ] Dev Containers extension installed in VS Code
+- [ ] At least 8 GB RAM allocated to Docker (16 GB recommended)
+- [ ] At least 20 GB free disk space (50 GB recommended)
+- [ ] Internet connection for initial setup
+- [ ] Ports 6080 and 5901 available
+
+<Info>
+  You can verify Docker is working by running `docker --version` and `docker run hello-world` in your terminal.
+</Info>
+
+## Next steps
+
+Once you've verified all prerequisites are met, proceed to the [installation guide](/installation) to set up the project.

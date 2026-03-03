@@ -1,0 +1,173 @@
+---
+title: Gazebo documentation
+description: Gazebo Harmonic simulator reference and tutorials
+---
+
+Learn how to use Gazebo Harmonic for realistic robot simulation with physics, sensors, and 3D visualization.
+
+## Official documentation
+
+<Card title="Gazebo Documentation" icon="cube" href="https://gazebosim.org/docs">
+  Complete simulator reference including API documentation, tutorials, and migration guides
+</Card>
+
+## About Gazebo Harmonic
+
+This dev container uses **Gazebo Harmonic**, the latest long-term support (LTS) release of the Gazebo simulator, providing:
+
+- **Advanced physics**: Realistic dynamics simulation for accurate robot behavior
+- **GPU acceleration**: Hardware-accelerated rendering for smooth visualization
+- **Sensor simulation**: LiDAR, cameras, IMU, and other sensors with realistic noise models
+- **ROS2 integration**: Seamless communication between Gazebo and ROS2 nodes
+
+<Info>
+  Gazebo Harmonic replaces the older "Gazebo Classic" and provides improved performance, better ROS2 integration, and modern rendering capabilities.
+</Info>
+
+## Accessing Gazebo
+
+### Browser-based GUI
+
+Access the Gazebo interface through noVNC:
+
+1. Start a simulation (e.g., `tb3_empty`)
+2. Open your browser to http://localhost:6080
+3. Enter password: `ros`
+4. Gazebo window appears on the virtual desktop
+
+### Command line interface
+
+Interact with Gazebo using the `gz` command:
+
+```bash
+# List running simulations
+gz sim list
+
+# Get world information
+gz world info
+
+# Spawn models programmatically
+gz model --spawn-file model.sdf
+```
+
+## Working with simulations
+
+### Launching worlds
+
+<CardGroup cols={3}>
+  <Card title="Empty world" icon="square">
+    ```bash
+    tb3_empty
+    ```
+    Minimal environment for basic testing
+  </Card>
+  
+  <Card title="TurtleBot3 world" icon="shapes">
+    ```bash
+    tb3_world
+    ```
+    Obstacle course for navigation
+  </Card>
+  
+  <Card title="House world" icon="house">
+    ```bash
+    tb3_house
+    ```
+    Multi-room indoor environment
+  </Card>
+</CardGroup>
+
+### Simulation features
+
+#### Physics engine
+
+Gazebo simulates:
+- **Rigid body dynamics**: Accurate mass, inertia, and collision detection
+- **Friction models**: Realistic wheel-ground interaction
+- **Gravity and forces**: External forces affecting robot motion
+
+#### Sensor models
+
+Available sensors include:
+- **LiDAR**: 360-degree laser range finder with configurable resolution
+- **RGB cameras**: Visual sensors for computer vision tasks
+- **IMU**: Accelerometer and gyroscope for orientation estimation
+- **Odometry**: Wheel encoder simulation for dead reckoning
+
+## Performance optimization
+
+<Info>
+  If Gazebo runs slowly, try these optimization tips from the troubleshooting guide.
+</Info>
+
+### GPU acceleration
+
+Verify GPU support:
+
+```bash
+glxinfo | grep "direct rendering"
+```
+
+If GPU acceleration is unavailable, use software rendering:
+
+```bash
+export LIBGL_ALWAYS_SOFTWARE=1
+tb3_empty
+```
+
+### Resource allocation
+
+Allocate more resources in Docker Desktop:
+- **CPUs**: 4-6 cores recommended
+- **Memory**: 8-16 GB recommended
+- **Disk**: 50 GB+ for simulations and logs
+
+## Troubleshooting
+
+Common Gazebo issues and solutions:
+
+### Gazebo won't start
+
+Kill existing processes:
+
+```bash
+pkill -9 gz
+pkill -9 gzserver
+pkill -9 gzclient
+```
+
+### Robot model missing
+
+Verify environment variable:
+
+```bash
+echo $TURTLEBOT3_MODEL
+# Should output: burger
+```
+
+### Simulation crashes
+
+Clear Gazebo cache:
+
+```bash
+rm -rf ~/.gz/
+```
+
+Check logs for detailed error messages:
+
+```bash
+cat ~/.gz/gazebo/server.log
+cat ~/.gz/gazebo/client.log
+```
+
+## Additional resources
+
+<CardGroup cols={2}>
+  <Card title="Gazebo Tutorials" icon="graduation-cap" href="https://gazebosim.org/docs/harmonic/tutorials">
+    Step-by-step guides for building worlds and plugins
+  </Card>
+  
+  <Card title="ROS-Gazebo Bridge" icon="bridge" href="https://github.com/gazebosim/ros_gz">
+    Integration layer between ROS2 and Gazebo Harmonic
+  </Card>
+</CardGroup>

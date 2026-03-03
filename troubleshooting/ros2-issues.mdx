@@ -1,0 +1,214 @@
+---
+title: ROS2 issues
+description: Fix ROS2 topics not visible, package not found, and node communication problems
+---
+
+Resolve ROS2-specific issues with topics, nodes, and package discovery.
+
+## ROS2 topics not visible
+
+**Symptoms:**
+- `ros2 topic list` shows nothing
+- Nodes not communicating
+
+<Accordion title="Check ROS_DOMAIN_ID">
+  The domain ID isolates ROS2 networks:
+  
+  ```bash
+  echo $ROS_DOMAIN_ID
+  # Should output: 30
+  
+  export ROS_DOMAIN_ID=30
+  ```
+  
+  All nodes must use the same ROS_DOMAIN_ID to communicate.
+</Accordion>
+
+<Accordion title="Source workspace">
+  Ensure ROS2 environment is properly sourced:
+  
+  ```bash
+  source /opt/ros/jazzy/setup.bash
+  source /workspace/turtlebot3_ws/install/setup.bash
+  # Or use: sb
+  ```
+  
+  You must source the workspace in every new terminal.
+</Accordion>
+
+<Accordion title="Verify simulation is running">
+  Topics only appear when nodes are publishing them:
+  
+  ```bash
+  ros2 node list
+  # Should see nodes if simulation is running
+  ```
+  
+  If no nodes are listed, start the simulation first with `tb3_empty`.
+</Accordion>
+
+## Package not found
+
+**Symptoms:**
+- "Package 'turtlebot3_XXX' not found"
+- Cannot launch nodes
+
+<Warning>
+This usually means the workspace wasn't built successfully or wasn't sourced in the current terminal.
+</Warning>
+
+<Steps>
+  <Step title="Rebuild workspace">
+    ```bash
+    cd /workspace/turtlebot3_ws
+    colcon build --symlink-install
+    source install/setup.bash
+    ```
+  </Step>
+  
+  <Step title="Verify package exists">
+    ```bash
+    ros2 pkg list | grep turtlebot3
+    ls /workspace/turtlebot3_ws/src
+    ```
+    
+    You should see all TurtleBot3 packages listed.
+  </Step>
+  
+  <Step title="Re-clone repositories if missing">
+    ```bash
+    cd /workspace/turtlebot3_ws/src
+    rm -rf turtlebot3*
+    bash /workspace/turtlebot3_ws/.devcontainer/post-create.sh
+    ```
+  </Step>
+</Steps>
+
+## Build and compilation issues
+
+**Symptoms:**
+- `colcon build` fails with errors
+- Compilation errors
+
+<Accordion title="Clean and rebuild">
+  Remove build artifacts and rebuild from scratch:
+  
+  ```bash
+  cd /workspace/turtlebot3_ws
+  rm -rf build install log
+  colcon build --symlink-install
+  ```
+</Accordion>
+
+<Accordion title="Install missing dependencies">
+  ```bash
+  sudo apt update
+  rosdep update
+  rosdep install --from-paths src --ignore-src -r -y
+  ```
+  
+  This automatically installs all dependencies declared in package.xml files.
+</Accordion>
+
+<Accordion title="Build with verbose output">
+  See detailed compilation messages:
+  
+  ```bash
+  colcon build --symlink-install --event-handlers console_direct+
+  ```
+</Accordion>
+
+<Accordion title="Build one package at a time">
+  Isolate which package is failing:
+  
+  ```bash
+  colcon build --packages-select turtlebot3_gazebo
+  ```
+</Accordion>
+
+## Dependency errors
+
+If you get errors about missing ROS2 packages:
+
+```bash
+# Update rosdep
+rosdep update
+
+# Install all dependencies
+cd /workspace/turtlebot3_ws
+rosdep install --from-paths src --ignore-src -y -r
+
+# Install specific package if needed
+sudo apt install ros-jazzy-<package-name>
+```
+
+## Node communication issues
+
+If nodes are running but not communicating:
+
+1. **Check ROS_DOMAIN_ID matches** across all terminals
+2. **Verify DDS implementation**:
+   ```bash
+   echo $RMW_IMPLEMENTATION
+   # Should be: rmw_cyclonedds_cpp
+   ```
+3. **Check topic names** - ensure publisher and subscriber use exact same name
+4. **Verify message types** match between publisher and subscriber
+
+## Service or action not available
+
+If you get "service not available" or "action server not available":
+
+```bash
+# List all available services
+ros2 service list
+
+# List all available actions
+ros2 action list
+
+# Check if the server node is running
+ros2 node list
+```
+
+Make sure the node providing the service/action is actually running.
+
+## Nuclear option: Complete reset
+
+When nothing else works:
+
+<Steps>
+  <Step title="Close VS Code">
+    Exit VS Code completely.
+  </Step>
+  
+  <Step title="Stop all containers">
+    ```bash
+    docker stop $(docker ps -aq)
+    ```
+  </Step>
+  
+  <Step title="Remove containers">
+    ```bash
+    docker rm $(docker ps -aq)
+    ```
+  </Step>
+  
+  <Step title="Remove volumes (optional)">
+    <Warning>
+    This will delete container data. Your workspace files are safe but container configuration will reset.
+    </Warning>
+    
+    ```bash
+    docker volume prune
+    ```
+  </Step>
+  
+  <Step title="Restart Docker Desktop">
+    Quit and restart Docker Desktop completely.
+  </Step>
+  
+  <Step title="Rebuild container">
+    - Open project in VS Code
+    - Press F1 → "Dev Containers: Rebuild Container Without Cache"
+  </Step>
+</Steps>

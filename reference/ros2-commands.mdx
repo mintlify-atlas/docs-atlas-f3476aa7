@@ -1,0 +1,583 @@
+---
+title: ROS2 commands
+description: Common ROS2 commands for the TurtleBot3 development environment
+---
+
+## Overview
+
+ROS2 provides a rich command-line interface for interacting with the robot system. This page covers common ROS2 commands used in the TurtleBot3 development environment.
+
+## Basic commands
+
+### Check ROS2 installation
+
+```bash
+ros2 --version
+```
+
+Displays the installed ROS2 version (should show jazzy).
+
+### Get help
+
+```bash
+ros2 --help
+ros2 <command> --help
+```
+
+Show available commands or help for a specific command.
+
+## Node commands
+
+Nodes are executable programs that perform computation.
+
+### List running nodes
+
+```bash
+ros2 node list
+```
+
+**Example output**:
+```
+/gazebo
+/robot_state_publisher
+/turtlebot3_diff_drive
+```
+
+### Node information
+
+```bash
+ros2 node info /node_name
+```
+
+**Example**:
+```bash
+ros2 node info /turtlebot3_diff_drive
+```
+
+Shows:
+- Subscribers
+- Publishers
+- Services
+- Actions
+
+### Run a node
+
+```bash
+ros2 run <package_name> <executable_name>
+```
+
+**Example**:
+```bash
+ros2 run turtlebot3_teleop teleop_keyboard
+```
+
+## Topic commands
+
+Topics are named buses over which nodes exchange messages.
+
+### List active topics
+
+```bash
+ros2 topic list
+```
+
+**Common TurtleBot3 topics**:
+- `/cmd_vel` - Velocity commands
+- `/odom` - Odometry data
+- `/scan` - Laser scan data
+- `/imu` - IMU data
+- `/joint_states` - Joint states
+
+### List topics with types
+
+```bash
+ros2 topic list -t
+```
+
+**Example output**:
+```
+/cmd_vel [geometry_msgs/msg/Twist]
+/odom [nav_msgs/msg/Odometry]
+/scan [sensor_msgs/msg/LaserScan]
+```
+
+### Topic information
+
+```bash
+ros2 topic info /topic_name
+```
+
+**Example**:
+```bash
+ros2 topic info /cmd_vel
+```
+
+Shows:
+- Message type
+- Publisher count
+- Subscription count
+
+### Echo topic messages
+
+```bash
+ros2 topic echo /topic_name
+```
+
+**Example**:
+```bash
+ros2 topic echo /scan
+```
+
+Displays messages in real-time.
+
+### Show message rate
+
+```bash
+ros2 topic hz /topic_name
+```
+
+**Example**:
+```bash
+ros2 topic hz /scan
+```
+
+**Output**: `average rate: 5.000`
+
+### Publish to topic
+
+```bash
+ros2 topic pub /topic_name <msg_type> "<message>"
+```
+
+**Example** (move robot forward):
+```bash
+ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.2, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+```
+
+**Example** (continuous publishing):
+```bash
+ros2 topic pub /cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.1}, angular: {z: 0.5}}" -r 10
+```
+
+## Service commands
+
+Services provide request/reply interactions.
+
+### List services
+
+```bash
+ros2 service list
+```
+
+### List services with types
+
+```bash
+ros2 service list -t
+```
+
+### Service information
+
+```bash
+ros2 service type /service_name
+```
+
+**Example**:
+```bash
+ros2 service type /gazebo/spawn_entity
+```
+
+### Find services by type
+
+```bash
+ros2 service find <service_type>
+```
+
+**Example**:
+```bash
+ros2 service find std_srvs/srv/Empty
+```
+
+### Call a service
+
+```bash
+ros2 service call /service_name <service_type> "<request>"
+```
+
+**Example** (reset Gazebo simulation):
+```bash
+ros2 service call /reset_simulation std_srvs/srv/Empty
+```
+
+## Parameter commands
+
+Parameters are node configuration values.
+
+### List parameters
+
+```bash
+ros2 param list
+```
+
+Lists all parameters for all nodes.
+
+### Get parameter value
+
+```bash
+ros2 param get /node_name parameter_name
+```
+
+**Example**:
+```bash
+ros2 param get /turtlebot3_diff_drive wheel_separation
+```
+
+### Set parameter value
+
+```bash
+ros2 param set /node_name parameter_name value
+```
+
+**Example**:
+```bash
+ros2 param set /turtlebot3_diff_drive max_velocity 0.5
+```
+
+### Dump parameters to file
+
+```bash
+ros2 param dump /node_name
+```
+
+Saves node parameters to YAML file.
+
+### Load parameters from file
+
+```bash
+ros2 param load /node_name params.yaml
+```
+
+## Action commands
+
+Actions are for long-running tasks with feedback.
+
+### List actions
+
+```bash
+ros2 action list
+```
+
+**Common Navigation2 actions**:
+- `/navigate_to_pose`
+- `/follow_path`
+- `/compute_path_to_pose`
+
+### Action information
+
+```bash
+ros2 action info /action_name
+```
+
+**Example**:
+```bash
+ros2 action info /navigate_to_pose
+```
+
+### Send action goal
+
+```bash
+ros2 action send_goal /action_name <action_type> "<goal>"
+```
+
+**Example** (navigate to position):
+```bash
+ros2 action send_goal /navigate_to_pose nav2_msgs/action/NavigateToPose \
+  "{pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 0.5}}}}"
+```
+
+## Package commands
+
+### List installed packages
+
+```bash
+ros2 pkg list
+```
+
+### List TurtleBot3 packages
+
+```bash
+ros2 pkg list | grep turtlebot3
+```
+
+### Find package executables
+
+```bash
+ros2 pkg executables <package_name>
+```
+
+**Example**:
+```bash
+ros2 pkg executables turtlebot3_teleop
+```
+
+### Show package prefix (install location)
+
+```bash
+ros2 pkg prefix <package_name>
+```
+
+## Launch commands
+
+### Run a launch file
+
+```bash
+ros2 launch <package_name> <launch_file>
+```
+
+**Example**:
+```bash
+ros2 launch turtlebot3_gazebo empty_world.launch.py
+```
+
+### Pass arguments to launch file
+
+```bash
+ros2 launch <package_name> <launch_file> arg:=value
+```
+
+**Example**:
+```bash
+ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py x_pose:=1.0 y_pose:=2.0
+```
+
+## Interface commands
+
+Interface commands show message/service/action definitions.
+
+### List message types
+
+```bash
+ros2 interface list
+ros2 interface list msg
+```
+
+### Show message definition
+
+```bash
+ros2 interface show <msg_type>
+```
+
+**Example**:
+```bash
+ros2 interface show geometry_msgs/msg/Twist
+```
+
+**Output**:
+```
+Vector3 linear
+  float64 x
+  float64 y
+  float64 z
+Vector3 angular
+  float64 x
+  float64 y
+  float64 z
+```
+
+### Show package interfaces
+
+```bash
+ros2 interface package <package_name>
+```
+
+**Example**:
+```bash
+ros2 interface package turtlebot3_msgs
+```
+
+## Bag commands
+
+Bag files record and replay ROS2 data.
+
+### Record topics
+
+```bash
+ros2 bag record /topic1 /topic2
+```
+
+**Example** (record all sensor data):
+```bash
+ros2 bag record /scan /odom /imu
+```
+
+### Record all topics
+
+```bash
+ros2 bag record -a
+```
+
+### Play bag file
+
+```bash
+ros2 bag play <bag_file>
+```
+
+### Bag information
+
+```bash
+ros2 bag info <bag_file>
+```
+
+## Doctor command
+
+Diagnose ROS2 setup issues.
+
+```bash
+ros2 doctor
+```
+
+Checks:
+- Network configuration
+- System setup
+- ROS2 environment
+
+### Full report
+
+```bash
+ros2 doctor --report
+```
+
+## Daemon commands
+
+Manage the ROS2 daemon.
+
+### Stop daemon
+
+```bash
+ros2 daemon stop
+```
+
+### Start daemon
+
+```bash
+ros2 daemon start
+```
+
+### Restart daemon
+
+```bash
+ros2 daemon stop && ros2 daemon start
+```
+
+**When to use**: If `ros2` commands are slow or hanging.
+
+## Common workflows
+
+### Inspect running system
+
+```bash
+# See what nodes are running
+ros2 node list
+
+# See what topics are active
+ros2 topic list
+
+# See messages on a topic
+ros2 topic echo /scan
+
+# Check message rate
+ros2 topic hz /cmd_vel
+```
+
+### Debug robot not moving
+
+```bash
+# Check if velocity commands are being published
+ros2 topic hz /cmd_vel
+
+# Check the actual values
+ros2 topic echo /cmd_vel
+
+# Manually send a command
+ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist \
+  "{linear: {x: 0.2}}"
+```
+
+### Monitor sensor data
+
+```bash
+# Check laser scan rate
+ros2 topic hz /scan
+
+# View laser data
+ros2 topic echo /scan --no-arr
+
+# Check odometry
+ros2 topic echo /odom
+```
+
+### Record and replay
+
+```bash
+# Record a test run
+ros2 bag record -a -o test_run
+
+# Play it back later
+ros2 bag play test_run
+```
+
+## Environment variables
+
+Key ROS2 environment variables:
+
+| Variable | Value | Purpose |
+|----------|-------|----------|
+| `ROS_DISTRO` | `jazzy` | ROS2 distribution |
+| `ROS_DOMAIN_ID` | `30` | Network isolation |
+| `RMW_IMPLEMENTATION` | `rmw_cyclonedds_cpp` | DDS implementation |
+| `ROS_LOCALHOST_ONLY` | `0` or `1` | Restrict to localhost |
+
+### Check environment
+
+```bash
+printenv | grep ROS
+```
+
+## Tips and tricks
+
+### Auto-completion
+
+Press `Tab` to auto-complete commands:
+
+```bash
+ros2 topic <Tab><Tab>
+ros2 topic echo /cmd<Tab>
+```
+
+### Command history
+
+Search previous commands with `Ctrl+R`:
+
+```bash
+(reverse-i-search)`topic': ros2 topic echo /scan
+```
+
+### Compact output
+
+```bash
+# Suppress array output for cleaner display
+ros2 topic echo /scan --no-arr
+
+# Show only specific fields
+ros2 topic echo /odom --field pose.pose.position
+```
+
+### Multiple domains
+
+Run multiple robot systems by changing `ROS_DOMAIN_ID`:
+
+```bash
+export ROS_DOMAIN_ID=31
+ros2 run turtlebot3_teleop teleop_keyboard
+```

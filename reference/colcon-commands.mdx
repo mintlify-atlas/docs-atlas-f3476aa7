@@ -1,0 +1,529 @@
+---
+title: Colcon commands
+description: Colcon build system commands for ROS2 development
+---
+
+## Overview
+
+Colcon is the build tool used in ROS2 to build packages. It handles dependencies, parallel builds, and workspace management.
+
+## Basic commands
+
+### Build workspace
+
+```bash
+colcon build
+```
+
+**Default behavior**:
+- Builds all packages in `src/`
+- Installs to `install/`
+- Creates `build/` and `log/` directories
+- Uses all available CPU cores
+
+### Build with symlink install
+
+```bash
+colcon build --symlink-install
+```
+
+**Recommended for development**:
+- Creates symlinks instead of copying files
+- Changes to Python scripts and launch files take effect immediately
+- No rebuild needed for non-compiled changes
+- Used by the `cb` alias
+
+### Clean and build
+
+```bash
+rm -rf build install log
+colcon build --symlink-install
+```
+
+**When to use**:
+- After changing CMakeLists.txt
+- After changing package.xml
+- When build is corrupted
+- When switching branches with different dependencies
+
+## Build options
+
+### Build specific packages
+
+```bash
+colcon build --packages-select <package_name>
+```
+
+**Example**:
+```bash
+colcon build --packages-select turtlebot3_gazebo
+```
+
+**Multiple packages**:
+```bash
+colcon build --packages-select turtlebot3_gazebo turtlebot3_teleop
+```
+
+### Build package and dependencies
+
+```bash
+colcon build --packages-up-to <package_name>
+```
+
+**Example**:
+```bash
+colcon build --packages-up-to turtlebot3_navigation2
+```
+
+Builds the package and all its dependencies.
+
+### Skip packages
+
+```bash
+colcon build --packages-skip <package_name>
+```
+
+**Example**:
+```bash
+colcon build --packages-skip turtlebot3_fake_node
+```
+
+### Continue on error
+
+```bash
+colcon build --continue-on-error
+```
+
+Continues building other packages even if some fail.
+
+## Parallel build options
+
+### Limit parallel workers
+
+```bash
+colcon build --parallel-workers 2
+```
+
+**When to use**:
+- Limited RAM (reduce workers to avoid OOM)
+- Limited CPU cooling
+- To reduce system load
+
+**Default**: Uses all available CPU cores
+
+### Single-threaded build
+
+```bash
+colcon build --parallel-workers 1
+```
+
+**When to use**:
+- Debugging build issues
+- Very limited resources
+
+## CMake options
+
+### Build type
+
+```bash
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
+
+**Build types**:
+- `Release`: Optimized, no debug symbols (recommended for production)
+- `Debug`: Debug symbols, no optimization (for debugging)
+- `RelWithDebInfo`: Optimized with debug symbols
+- `MinSizeRel`: Optimized for size
+
+**Default in post-start.sh**: Release
+
+### Export compile commands
+
+```bash
+colcon build --cmake-args -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+```
+
+**Use case**: Enables better IDE integration (code completion, analysis)
+
+### Custom CMake arguments
+
+```bash
+colcon build --cmake-args -DBUILD_TESTING=OFF
+```
+
+Pass any CMake argument to all packages.
+
+## Output options
+
+### Verbose output
+
+```bash
+colcon build --event-handlers console_direct+
+```
+
+Shows all build output in real-time (useful for debugging).
+
+### Less verbose output
+
+```bash
+colcon build --event-handlers console_cohesion+
+```
+
+Groups output by package (default behavior).
+
+### Log to file only
+
+```bash
+colcon build --event-handlers log-
+```
+
+Suppresses console output, logs only to files.
+
+## Test commands
+
+### Build with tests
+
+```bash
+colcon build
+```
+
+Tests are built by default.
+
+### Build without tests
+
+```bash
+colcon build --cmake-args -DBUILD_TESTING=OFF
+```
+
+### Run tests
+
+```bash
+colcon test
+```
+
+Runs all tests in the workspace.
+
+### Test specific package
+
+```bash
+colcon test --packages-select <package_name>
+```
+
+### Show test results
+
+```bash
+colcon test-result --all
+```
+
+Displays summary of test results.
+
+### Verbose test results
+
+```bash
+colcon test-result --all --verbose
+```
+
+Shows detailed test output.
+
+## Workspace information
+
+### List packages
+
+```bash
+colcon list
+```
+
+Lists all packages in the workspace.
+
+### List with paths
+
+```bash
+colcon list -p
+```
+
+**Example output**:
+```
+DynamixelSDK    /workspace/turtlebot3_ws/src/DynamixelSDK
+turtlebot3      /workspace/turtlebot3_ws/src/turtlebot3/turtlebot3
+```
+
+### List packages topologically
+
+```bash
+colcon list --topological-order
+```
+
+Shows packages in dependency order (dependencies first).
+
+### List packages by name pattern
+
+```bash
+colcon list --packages-select-regex "turtlebot3.*"
+```
+
+## Advanced usage
+
+### Build with sanitizers
+
+```bash
+colcon build --cmake-args \
+  -DCMAKE_CXX_FLAGS="-fsanitize=address -fsanitize=undefined" \
+  -DCMAKE_BUILD_TYPE=Debug
+```
+
+**Use case**: Memory leak and undefined behavior detection
+
+### Custom install prefix
+
+```bash
+colcon build --install-base /custom/path/install
+```
+
+**Default**: `./install`
+
+### Custom build directory
+
+```bash
+colcon build --build-base /custom/path/build
+```
+
+**Default**: `./build`
+
+### Merge install
+
+```bash
+colcon build --merge-install
+```
+
+Installs all packages into a single directory instead of separate directories.
+
+## Common workflows
+
+### Full clean rebuild
+
+```bash
+rm -rf build install log
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
+
+Used by post-start.sh on first build.
+
+### Quick incremental build
+
+```bash
+colcon build --symlink-install
+```
+
+Rebuild only changed packages.
+
+### Build single package for testing
+
+```bash
+colcon build --packages-select my_package
+source install/setup.bash
+ros2 run my_package my_node
+```
+
+### Debug build with verbose output
+
+```bash
+colcon build \
+  --packages-select my_package \
+  --cmake-args -DCMAKE_BUILD_TYPE=Debug \
+  --event-handlers console_direct+
+```
+
+### Production release build
+
+```bash
+rm -rf build install log
+colcon build \
+  --cmake-args \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_TESTING=OFF
+```
+
+## Environment sourcing
+
+After building, source the workspace:
+
+### Source workspace
+
+```bash
+source install/setup.bash
+```
+
+Or use the alias:
+
+```bash
+sb
+```
+
+### Check sourced workspace
+
+```bash
+echo $AMENT_PREFIX_PATH
+```
+
+Should include `/workspace/turtlebot3_ws/install`.
+
+### Source in every terminal
+
+Add to `~/.bashrc` (already done by post-create.sh):
+
+```bash
+if [ -f /workspace/turtlebot3_ws/install/setup.bash ]; then
+    source /workspace/turtlebot3_ws/install/setup.bash
+fi
+```
+
+## Build logs
+
+### Log locations
+
+```
+log/
+├── latest -> latest_build/
+├── latest_build/
+│   ├── events.log
+│   ├── logger_all.log
+│   └── <package_name>/
+│       ├── stdout.log
+│       ├── stderr.log
+│       └── streams.log
+```
+
+### View build logs
+
+```bash
+cat log/latest_build/logger_all.log
+```
+
+### View package-specific logs
+
+```bash
+cat log/latest_build/turtlebot3_gazebo/stdout.log
+cat log/latest_build/turtlebot3_gazebo/stderr.log
+```
+
+### View test logs
+
+```bash
+cat log/latest_test/logger_all.log
+```
+
+## Troubleshooting
+
+### Build fails with no clear error
+
+**Try verbose output**:
+```bash
+colcon build --event-handlers console_direct+
+```
+
+### CMake cache issues
+
+**Clean build directory**:
+```bash
+rm -rf build
+colcon build
+```
+
+### Package not found after build
+
+**Source the workspace**:
+```bash
+source install/setup.bash
+```
+
+### Dependency issues
+
+**Update dependencies**:
+```bash
+rosdep update
+rosdep install --from-paths src --ignore-src -r -y
+```
+
+### Out of memory during build
+
+**Limit parallel workers**:
+```bash
+colcon build --parallel-workers 1
+```
+
+### Symlink issues on Windows
+
+**Don't use symlink install**:
+```bash
+colcon build
+```
+
+**Note**: Requires rebuild after any file changes.
+
+## Performance tips
+
+### Use ccache
+
+Install ccache for faster rebuilds:
+
+```bash
+sudo apt-get install ccache
+```
+
+Add to `~/.bashrc`:
+```bash
+export PATH="/usr/lib/ccache:$PATH"
+```
+
+### Limit memory usage
+
+```bash
+colcon build --parallel-workers $(( $(nproc) / 2 ))
+```
+
+Uses half the available cores to reduce memory pressure.
+
+### Use mold linker
+
+For faster linking:
+
+```bash
+sudo apt-get install mold
+colcon build --cmake-args -DCMAKE_EXE_LINKER_FLAGS="-fuse-ld=mold"
+```
+
+## Integration with aliases
+
+The `cb` alias is defined as:
+
+```bash
+alias cb='cd /workspace/turtlebot3_ws && colcon build --symlink-install'
+```
+
+You can pass additional arguments:
+
+```bash
+cb --packages-select turtlebot3_gazebo
+cb --cmake-args -DCMAKE_BUILD_TYPE=Debug
+cb --parallel-workers 2
+```
+
+## Common colcon arguments
+
+| Argument | Description |
+|----------|-------------|
+| `--symlink-install` | Use symlinks instead of copying files |
+| `--packages-select` | Build only specified packages |
+| `--packages-up-to` | Build package and dependencies |
+| `--packages-skip` | Skip specified packages |
+| `--parallel-workers N` | Limit parallel jobs to N |
+| `--cmake-args` | Pass arguments to CMake |
+| `--event-handlers` | Control output verbosity |
+| `--continue-on-error` | Don't stop on first error |
+| `--build-base` | Custom build directory |
+| `--install-base` | Custom install directory |
+
+## References
+
+- [Colcon documentation](https://colcon.readthedocs.io/)
+- [ROS2 Building documentation](https://docs.ros.org/en/jazzy/Tutorials/Beginner-Client-Libraries/Colcon-Tutorial.html)

@@ -1,0 +1,117 @@
+---
+title: Docker issues
+description: Troubleshoot Docker Desktop startup, permissions, and out of memory errors
+---
+
+Common Docker-related issues and their solutions for the TurtleBot3 development container.
+
+## Docker Desktop not starting
+
+<Warning>
+If Docker Desktop won't start, the container cannot run. Ensure virtualization is enabled in your system BIOS.
+</Warning>
+
+**Symptoms:**
+- Docker daemon is not running
+- Container won't start
+
+**Solutions:**
+
+<Steps>
+  <Step title="Enable virtualization in BIOS">
+    - Restart computer and enter BIOS (F2, F10, or Del key)
+    - Enable "Virtualization Technology" (Intel VT-x or AMD-V)
+    - Save and exit
+  </Step>
+  
+  <Step title="Restart Docker service">
+    **Windows (PowerShell as Administrator):**
+    ```powershell
+    net stop com.docker.service
+    net start com.docker.service
+    ```
+    
+    **macOS/Linux:**
+    ```bash
+    # Restart Docker Desktop application
+    # Or restart docker daemon on Linux
+    sudo systemctl restart docker
+    ```
+  </Step>
+  
+  <Step title="Reset Docker Desktop (if needed)">
+    - Right-click Docker Desktop system tray icon
+    - Troubleshoot → Reset to factory defaults
+    - Restart Docker
+  </Step>
+</Steps>
+
+## Permission denied (Linux)
+
+**Symptoms:**
+- "permission denied while trying to connect to Docker daemon"
+
+**Solution:**
+
+```bash
+# Add user to docker group
+sudo usermod -aG docker $USER
+
+# Log out and back in, or:
+newgrp docker
+
+# Verify
+docker run hello-world
+```
+
+## Out of memory errors
+
+**Symptoms:**
+- Container build fails partway through
+- "no space left on device" errors
+
+<Accordion title="Increase Docker resources (Docker Desktop)">
+  <Steps>
+    <Step title="Open Docker Desktop settings">
+      Navigate to Settings → Resources
+    </Step>
+    
+    <Step title="Adjust resource limits">
+      - Memory: 8GB minimum, 16GB recommended
+      - CPUs: 4-6 cores
+      - Disk: 50GB+ recommended
+    </Step>
+    
+    <Step title="Apply changes">
+      Click "Apply & Restart"
+    </Step>
+  </Steps>
+</Accordion>
+
+<Accordion title="Clean up Docker">
+  ```bash
+  # Remove unused images
+  docker image prune -a
+  
+  # Remove unused volumes
+  docker volume prune
+  
+  # Remove everything unused
+  docker system prune -a --volumes
+  ```
+</Accordion>
+
+## Resource allocation on Linux
+
+Resources are not limited by default on Linux. If you experience out of memory issues, check your system's available resources:
+
+```bash
+# Check available memory
+free -h
+
+# Check disk space
+df -h
+
+# Check Docker disk usage
+docker system df
+```

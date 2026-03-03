@@ -1,0 +1,363 @@
+---
+title: SLAM mapping
+description: Creating maps with Simultaneous Localization and Mapping
+---
+
+SLAM (Simultaneous Localization and Mapping) enables the robot to build a map of an unknown environment while simultaneously tracking its location within that map. The TurtleBot3 uses Cartographer for SLAM functionality.
+
+## What is SLAM?
+
+SLAM algorithms process sensor data (laser scans, odometry) to:
+- **Localize**: Determine the robot's position and orientation
+- **Map**: Build a 2D occupancy grid of the environment
+- **Update**: Continuously refine both the map and position estimate
+
+The result is an accurate map that can be used for autonomous navigation.
+
+## Starting SLAM
+
+### Using the alias
+
+The quickest way to start SLAM with Cartographer:
+
+```bash
+tb3_slam
+```
+
+This launches Cartographer with simulation time enabled and automatically opens RViz2 for visualization.
+
+### Using the full command
+
+```bash
+ros2 launch turtlebot3_cartographer cartographer.launch.py use_sim_time:=True
+```
+
+<Note>
+The `use_sim_time:=True` parameter is critical for simulation. It tells ROS2 to use Gazebo's simulated time instead of wall clock time.
+</Note>
+
+## Complete SLAM workflow
+
+<Steps>
+  <Step title="Launch simulation world">
+    Start a Gazebo world with obstacles to map:
+    ```bash
+    tb3_world
+    ```
+    Wait for the simulation to fully load.
+  </Step>
+  
+  <Step title="Start SLAM">
+    In a second terminal, launch Cartographer:
+    ```bash
+    tb3_slam
+    ```
+    RViz2 will open automatically in the VNC desktop.
+  </Step>
+  
+  <Step title="Start teleoperation">
+    In a third terminal, start keyboard control:
+    ```bash
+    tb3_teleop
+    ```
+  </Step>
+  
+  <Step title="Drive to explore">
+    Use keyboard controls to drive the robot:
+    - Press `i` to move forward
+    - Use `j` and `l` to rotate
+    - Drive slowly through all areas
+    - Ensure complete environment coverage
+  </Step>
+  
+  <Step title="Monitor in RViz2">
+    Access the VNC desktop at `http://localhost:6080` and watch:
+    - The map being built in real-time (gray = unknown, white = free space, black = obstacles)
+    - The robot's position and laser scan data
+    - The particle cloud showing position uncertainty
+  </Step>
+  
+  <Step title="Save the map">
+    Once mapping is complete, save the map in a fourth terminal:
+    ```bash
+    mkdir -p ~/maps
+    ros2 run nav2_map_server map_saver_cli -f ~/maps/my_map
+    ```
+    This creates two files:
+    - `my_map.pgm` (map image)
+    - `my_map.yaml` (map metadata)
+  </Step>
+</Steps>
+
+## Mapping tips
+
+### Movement strategy
+
+**Move slowly**: Rapid movements reduce map quality
+- Use brief taps of movement keys instead of holding
+- Allow the SLAM algorithm time to process sensor data
+- Pause occasionally at key locations
+
+**Smooth turns**: Gradual rotations work better than sharp spins
+- Use `u` and `o` keys for curved paths
+- Avoid rapid rotation with `j` and `l`
+
+**Complete coverage**: Drive through all areas you want mapped
+- Get close to walls and obstacles for detail
+- Cover open spaces thoroughly
+- Don't skip any areas
+
+**Close the loop**: Return to your starting position
+- This helps the SLAM algorithm reduce drift
+- Improves overall map accuracy
+- Essential for large environments
+
+### Choosing the right world
+
+**For practice**: Start with `tb3_world`
+- Medium complexity
+- Clear obstacles
+- Good for learning SLAM basics
+
+**For complex mapping**: Use `tb3_house`
+- Multiple rooms
+- Realistic indoor environment
+- Tests advanced SLAM capabilities
+
+**Avoid**: Don't use `tb3_empty` for SLAM practice
+- No features to map
+- SLAM needs distinct landmarks
+- Use only for testing SLAM startup
+
+## Understanding RViz2 visualization
+
+When you launch SLAM, RViz2 displays several important elements:
+
+### Map display
+
+- **White areas**: Free space where the robot can travel
+- **Black areas**: Obstacles and walls detected by sensors
+- **Gray areas**: Unknown/unexplored regions
+- **Map updates**: Watch gray areas turn white or black as you explore
+
+### Robot position
+
+- **Red arrow**: Current robot pose (position and orientation)
+- **Green/blue particles**: Position estimate uncertainty
+- **Laser scan**: Red dots showing current sensor readings
+
+### Quality indicators
+
+- **Clear boundaries**: Sharp transitions indicate good map quality
+- **Fuzzy edges**: Blurry boundaries suggest you moved too fast
+- **Gaps in walls**: Missing data means you need to explore that area more
+
+## Saving your map
+
+Once you've finished exploring and the map looks complete, save it for future use.
+
+### Create maps directory
+
+```bash
+mkdir -p ~/maps
+```
+
+### Save the map
+
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/maps/my_map
+```
+
+<Tip>
+Use descriptive names for your maps based on the environment:
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/maps/turtlebot3_world
+ros2 run nav2_map_server map_saver_cli -f ~/maps/house_floor1
+```
+</Tip>
+
+### Generated files
+
+The map saver creates two files:
+
+**my_map.pgm**
+- Portable graymap image file
+- Visual representation of the map
+- Can be viewed with image viewers
+
+**my_map.yaml**
+- Map metadata and configuration
+- Contains resolution, origin, and thresholds
+- Required by Navigation2
+
+<Note>
+Both files are needed for navigation. Keep them together and don't rename them separately.
+</Note>
+
+## Workflow examples
+
+### Mapping TurtleBot3 world
+
+**Terminal 1:**
+```bash
+tb3_world
+```
+
+**Terminal 2:**
+```bash
+tb3_slam
+```
+
+**Terminal 3:**
+```bash
+tb3_teleop
+# Drive slowly through the entire world
+# Cover all areas around obstacles
+# Return to starting position
+```
+
+**Terminal 4:**
+```bash
+mkdir -p ~/maps
+ros2 run nav2_map_server map_saver_cli -f ~/maps/turtlebot3_world
+```
+
+### Mapping house environment
+
+**Terminal 1:**
+```bash
+tb3_house
+```
+
+**Terminal 2:**
+```bash
+tb3_slam
+```
+
+**Terminal 3:**
+```bash
+tb3_teleop
+# Explore each room systematically
+# Drive through all doorways
+# Map furniture and obstacles
+# Return to start to close the loop
+```
+
+**Terminal 4:**
+```bash
+ros2 run nav2_map_server map_saver_cli -f ~/maps/house_complete
+```
+
+## Troubleshooting
+
+### RViz2 doesn't open
+
+<Steps>
+  <Step title="Check VNC access">
+    Ensure you can access the desktop at:
+    ```
+    http://localhost:6080
+    ```
+  </Step>
+  
+  <Step title="Manually launch RViz2">
+    In the VNC desktop, open a terminal and run:
+    ```bash
+    rviz2
+    ```
+  </Step>
+  
+  <Step title="Load SLAM config">
+    In RViz2, load the appropriate configuration file for SLAM visualization.
+  </Step>
+</Steps>
+
+### Map quality is poor
+
+**Move slower**
+- Reduce linear velocity by pressing `x` several times
+- Use brief key taps instead of holding keys down
+
+**Smoother movements**
+- Avoid sharp rotations
+- Use curved paths with `u` and `o` keys
+- Don't make sudden direction changes
+
+**Better coverage**
+- Drive closer to walls and obstacles
+- Explore all areas thoroughly
+- Return to starting position to close the loop
+
+### No map appears in RViz2
+
+<Steps>
+  <Step title="Verify SLAM is running">
+    Check that Cartographer nodes are active:
+    ```bash
+    ros2 node list | grep cartographer
+    ```
+  </Step>
+  
+  <Step title="Check topics">
+    Verify the map topic is publishing:
+    ```bash
+    ros2 topic list | grep map
+    ros2 topic echo /map --once
+    ```
+  </Step>
+  
+  <Step title="Source workspace">
+    Ensure the workspace is properly sourced:
+    ```bash
+    sb
+    ```
+  </Step>
+</Steps>
+
+### Map save fails
+
+<Steps>
+  <Step title="Create directory">
+    Ensure the maps directory exists:
+    ```bash
+    mkdir -p ~/maps
+    ```
+  </Step>
+  
+  <Step title="Check permissions">
+    Verify write permissions:
+    ```bash
+    ls -ld ~/maps
+    ```
+  </Step>
+  
+  <Step title="Verify map topic">
+    Confirm the map is being published:
+    ```bash
+    ros2 topic hz /map
+    ```
+    Should show a steady update rate.
+  </Step>
+</Steps>
+
+## Advanced SLAM options
+
+### Different SLAM algorithms
+
+While this environment uses Cartographer by default, TurtleBot3 also supports:
+- SLAM Toolbox
+- Gmapping (ROS1, requires bridging)
+
+### Parameter tuning
+
+For advanced users, Cartographer parameters can be adjusted in the launch file to optimize for:
+- Different sensor configurations
+- Varying environment types
+- Speed vs. accuracy trade-offs
+
+### Real-time map quality
+
+Monitor these indicators in RViz2:
+- Particle spread (localization confidence)
+- Loop closure events (drift correction)
+- Edge clarity (measurement quality)

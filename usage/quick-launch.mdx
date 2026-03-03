@@ -1,0 +1,252 @@
+---
+title: Quick launch aliases
+description: Pre-configured shortcuts for common TurtleBot3 operations
+---
+
+The development container includes pre-configured aliases that simplify common ROS2 and TurtleBot3 operations. These shortcuts are automatically available in every terminal session.
+
+## Build and source aliases
+
+These aliases help you quickly build and source your ROS2 workspace.
+
+### Build workspace
+
+```bash
+cb
+```
+
+This alias builds your entire workspace with colcon using symlink install for faster rebuilds.
+
+<CodeGroup>
+```bash Alias
+cb
+```
+
+```bash Full command
+cd /workspace/turtlebot3_ws && colcon build --symlink-install
+```
+</CodeGroup>
+
+### Source workspace
+
+```bash
+sb
+```
+
+Sources the workspace installation to make newly built packages available in your current terminal.
+
+<CodeGroup>
+```bash Alias
+sb
+```
+
+```bash Full command
+source /workspace/turtlebot3_ws/install/setup.bash
+```
+</CodeGroup>
+
+<Note>
+You must run `sb` after building with `cb` to use your newly compiled packages.
+</Note>
+
+## Simulation world aliases
+
+Launch different Gazebo simulation environments with a single command.
+
+### Empty world
+
+```bash
+tb3_empty
+```
+
+Launches a minimal empty world with the TurtleBot3 robot. Ideal for basic movement testing and teleoperation practice.
+
+<CodeGroup>
+```bash Alias
+tb3_empty
+```
+
+```bash Full command
+ros2 launch turtlebot3_gazebo empty_world.launch.py
+```
+</CodeGroup>
+
+### TurtleBot3 world
+
+```bash
+tb3_world
+```
+
+Launches the TurtleBot3 world featuring obstacles and barriers. Perfect for testing navigation and obstacle avoidance.
+
+<CodeGroup>
+```bash Alias
+tb3_world
+```
+
+```bash Full command
+ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+```
+</CodeGroup>
+
+### House environment
+
+```bash
+tb3_house
+```
+
+Launches a complex indoor house environment. Excellent for advanced SLAM and navigation testing.
+
+<CodeGroup>
+```bash Alias
+tb3_house
+```
+
+```bash Full command
+ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py
+```
+</CodeGroup>
+
+## Robot control aliases
+
+### Teleoperation
+
+```bash
+tb3_teleop
+```
+
+Starts keyboard teleoperation for manual robot control.
+
+<CodeGroup>
+```bash Alias
+tb3_teleop
+```
+
+```bash Full command
+ros2 run turtlebot3_teleop teleop_keyboard
+```
+</CodeGroup>
+
+## SLAM and navigation aliases
+
+### SLAM mapping
+
+```bash
+tb3_slam
+```
+
+Launches Cartographer SLAM for real-time mapping. RViz2 opens automatically to visualize the map being created.
+
+<CodeGroup>
+```bash Alias
+tb3_slam
+```
+
+```bash Full command
+ros2 launch turtlebot3_cartographer cartographer.launch.py use_sim_time:=True
+```
+</CodeGroup>
+
+### Autonomous navigation
+
+```bash
+tb3_nav
+```
+
+Starts Navigation2 stack for autonomous navigation with your saved map.
+
+<CodeGroup>
+```bash Alias
+tb3_nav
+```
+
+```bash Full command
+ros2 launch turtlebot3_navigation2 navigation2.launch.py use_sim_time:=True map:=$HOME/maps/my_map.yaml
+```
+</CodeGroup>
+
+<Note>
+The `tb3_nav` alias expects a map file at `~/maps/my_map.yaml`. Create a map using SLAM first before running autonomous navigation.
+</Note>
+
+## Software rendering aliases
+
+If you experience GPU-related crashes with Gazebo, use these software rendering alternatives.
+
+### Software rendering variants
+
+```bash
+tb3_empty_sw   # Empty world with software rendering
+tb3_world_sw   # TurtleBot3 world with software rendering
+tb3_house_sw   # House environment with software rendering
+```
+
+These aliases set `LIBGL_ALWAYS_SOFTWARE=1` to force software rendering, which provides better stability on systems without proper GPU acceleration.
+
+<Tip>
+Check `~/GPU_INFO.txt` in your container to see your GPU detection results and rendering recommendations.
+</Tip>
+
+## Common workflow examples
+
+### Basic simulation
+
+<Steps>
+  <Step title="Launch simulation">
+    Open a terminal and start the empty world:
+    ```bash
+    tb3_empty
+    ```
+  </Step>
+  
+  <Step title="Control the robot">
+    Open a second terminal and start teleoperation:
+    ```bash
+    tb3_teleop
+    ```
+  </Step>
+</Steps>
+
+### Build custom package
+
+<Steps>
+  <Step title="Build workspace">
+    ```bash
+    cb
+    ```
+  </Step>
+  
+  <Step title="Source installation">
+    ```bash
+    sb
+    ```
+  </Step>
+  
+  <Step title="Use your package">
+    Your newly built packages are now available in the current terminal.
+  </Step>
+</Steps>
+
+### SLAM workflow
+
+<Steps>
+  <Step title="Launch world">
+    ```bash
+    tb3_world
+    ```
+  </Step>
+  
+  <Step title="Start SLAM">
+    In a second terminal:
+    ```bash
+    tb3_slam
+    ```
+  </Step>
+  
+  <Step title="Drive to explore">
+    In a third terminal:
+    ```bash
+    tb3_teleop
+    ```
+  </Step>
+</Steps>

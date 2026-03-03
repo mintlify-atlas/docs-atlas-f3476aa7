@@ -1,0 +1,372 @@
+---
+title: Installation
+description: Step-by-step guide to install and configure the TurtleBot3 ROS2 Jazzy Dev Container
+---
+
+## Overview
+
+This guide will walk you through installing Docker, VS Code, and setting up the TurtleBot3 ROS2 Jazzy Dev Container on your system.
+
+<Info>
+  Installation typically takes 30-45 minutes including download time. The container build itself takes 10-15 minutes on first run.
+</Info>
+
+## Step 1: Install Docker
+
+Docker provides the containerization platform for the development environment.
+
+<CodeGroup>
+
+```bash Windows/macOS
+# Download Docker Desktop from:
+https://www.docker.com/products/docker-desktop/
+
+# After installation, verify:
+docker --version
+docker run hello-world
+```
+
+```bash Ubuntu/Debian
+# Install Docker Engine
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Add user to docker group
+sudo usermod -aG docker $USER
+
+# Log out and back in, then verify
+docker --version
+docker run hello-world
+```
+
+```bash Fedora
+# Install Docker Engine
+sudo dnf -y install dnf-plugins-core
+sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo
+sudo dnf install docker-ce docker-ce-cli containerd.io
+
+# Start Docker
+sudo systemctl start docker
+sudo systemctl enable docker
+
+# Add user to docker group
+sudo usermod -aG docker $USER
+
+# Log out and back in, then verify
+docker --version
+```
+
+</CodeGroup>
+
+### Windows/macOS installation details
+
+<Steps>
+  <Step title="Download Docker Desktop">
+    Visit [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/) and download the installer for your platform
+  </Step>
+  <Step title="Run installer">
+    Double-click the downloaded installer and follow the prompts with default settings
+  </Step>
+  <Step title="Restart computer">
+    Restart your computer after installation completes
+  </Step>
+  <Step title="Start Docker Desktop">
+    Launch Docker Desktop from your applications menu and wait for it to fully start
+  </Step>
+  <Step title="Verify installation">
+    Open a terminal and run `docker --version` and `docker run hello-world`
+  </Step>
+</Steps>
+
+<Warning>
+  On Windows, Docker Desktop requires WSL 2. If it's not installed, Docker Desktop will prompt you to install it. Follow the on-screen instructions.
+</Warning>
+
+### Linux post-installation
+
+After installing Docker on Linux, you must add your user to the `docker` group to run containers without `sudo`:
+
+```bash
+# Add current user to docker group
+sudo usermod -aG docker $USER
+
+# Apply the changes (choose one):
+# Option 1: Log out and log back in
+# Option 2: Run this command
+newgrp docker
+
+# Verify you can run docker without sudo
+docker run hello-world
+```
+
+<Note>
+  For other Linux distributions, see the [official Docker installation guide](https://docs.docker.com/engine/install/).
+</Note>
+
+## Step 2: Install VS Code
+
+Visual Studio Code is the recommended editor for working with dev containers.
+
+<Steps>
+  <Step title="Download VS Code">
+    Visit [code.visualstudio.com](https://code.visualstudio.com/) and download the installer for your platform
+  </Step>
+  <Step title="Install with defaults">
+    Run the installer and use the default settings
+  </Step>
+  <Step title="Launch VS Code">
+    Open VS Code to verify the installation completed successfully
+  </Step>
+</Steps>
+
+## Step 3: Install Dev Containers extension
+
+The Dev Containers extension enables VS Code to work with Docker containers.
+
+<Steps>
+  <Step title="Open Extensions view">
+    In VS Code, click the Extensions icon in the sidebar or press `Ctrl+Shift+X` (Windows/Linux) or `Cmd+Shift+X` (macOS)
+  </Step>
+  <Step title="Search for extension">
+    Type "Dev Containers" in the search box
+  </Step>
+  <Step title="Install extension">
+    Find "Dev Containers" by Microsoft and click Install
+  </Step>
+  <Step title="Reload if needed">
+    Reload VS Code if prompted after installation
+  </Step>
+</Steps>
+
+## Step 4: Get the project
+
+You can either clone the repository with Git or download it as a ZIP file.
+
+<CodeGroup>
+
+```bash Clone with Git
+git clone https://github.com/prakash-aryan/turtlebot3_jazzy_devcontainer.git
+cd turtlebot3_jazzy_devcontainer
+```
+
+```bash Download ZIP
+# Download from:
+https://github.com/prakash-aryan/turtlebot3_jazzy_devcontainer/archive/refs/heads/main.zip
+
+# Extract the ZIP file to your preferred location
+# Navigate to the extracted folder
+cd turtlebot3_jazzy_devcontainer
+```
+
+</CodeGroup>
+
+<Note>
+  Choose a location with sufficient disk space (at least 20 GB free, 50 GB recommended).
+</Note>
+
+## Step 5: Open in VS Code
+
+Open the project folder in VS Code:
+
+```bash
+cd turtlebot3_jazzy_devcontainer
+code .
+```
+
+Alternatively, in VS Code:
+1. Click File → Open Folder
+2. Navigate to the `turtlebot3_jazzy_devcontainer` folder
+3. Click Select Folder
+
+## Step 6: Build and start the container
+
+<Steps>
+  <Step title="Reopen in Container">
+    VS Code will detect the dev container configuration and show a notification. Click "Reopen in Container"
+    
+    If you don't see the notification, press `F1` and select "Dev Containers: Reopen in Container"
+  </Step>
+  <Step title="Wait for build">
+    The container build process will start. This takes 10-15 minutes on first run:
+    - Downloads Ubuntu 24.04 base image (~1 GB)
+    - Installs ROS2 Jazzy packages (~2 GB)
+    - Installs Gazebo Harmonic (~500 MB)
+    - Clones TurtleBot3 repositories
+    - Builds ROS2 workspace with colcon
+  </Step>
+  <Step title="Monitor progress">
+    You can click "Show Log" in the notification to watch the build progress
+  </Step>
+  <Step title="Wait for completion">
+    When the build finishes, VS Code will connect to the container and you'll see a terminal inside the container
+  </Step>
+</Steps>
+
+<Warning>
+  The first build downloads several gigabytes of data. Ensure you have a stable internet connection and sufficient disk space.
+</Warning>
+
+### Build process details
+
+The container build performs these steps automatically:
+
+**Dockerfile build:**
+1. Pulls `osrf/ros:jazzy-desktop-full-noble` base image
+2. Installs Gazebo Harmonic from OSRF repositories
+3. Installs Navigation2 and Cartographer packages
+4. Installs development tools (colcon, vcstool, etc.)
+5. Configures OpenGL/Mesa for graphics support
+
+**Post-create script:**
+1. Sources ROS2 Jazzy environment
+2. Configures `.bashrc` with ROS2 setup and aliases
+3. Clones TurtleBot3 repositories:
+   - `DynamixelSDK` (motor control)
+   - `turtlebot3_msgs` (message definitions)
+   - `turtlebot3` (core packages)
+   - `turtlebot3_simulations` (Gazebo packages)
+4. Initializes and updates rosdep
+5. Installs package dependencies
+
+**Post-start script:**
+1. Builds the workspace with `colcon build --symlink-install`
+2. Verifies build success
+3. Displays quick start instructions
+
+## Step 7: Verify the setup
+
+After the container starts, verify everything is working correctly:
+
+```bash
+bash verify-setup.sh
+```
+
+You should see green checkmarks for all tests:
+
+- ROS2 Jazzy installed
+- Gazebo Harmonic installed
+- Python 3 available
+- colcon build tool
+- TurtleBot3 packages
+- Navigation2 packages
+- Cartographer packages
+- Environment variables configured
+- Directory structure created
+- Workspace built successfully
+
+<Info>
+  If any checks fail, review the error messages and refer to the troubleshooting section. Most issues are resolved by rebuilding the container.
+</Info>
+
+## Configuration options
+
+### Adjust Docker resources
+
+If the container runs slowly, allocate more resources in Docker Desktop:
+
+<Steps>
+  <Step title="Open Docker Desktop settings">
+    Click the Docker icon and select Settings
+  </Step>
+  <Step title="Go to Resources">
+    Navigate to Resources → Advanced (Windows) or Resources (macOS)
+  </Step>
+  <Step title="Increase allocations">
+    Adjust these settings:
+    - CPUs: 4-6 cores recommended
+    - Memory: 8-16 GB recommended
+    - Disk: 50 GB recommended
+  </Step>
+  <Step title="Apply and restart">
+    Click Apply & Restart to save changes
+  </Step>
+</Steps>
+
+<Note>
+  On Linux, Docker uses system resources directly without limits. No configuration needed.
+</Note>
+
+### Change robot model
+
+To use a different TurtleBot3 model, edit `.devcontainer/devcontainer.json`:
+
+```json
+"remoteEnv": {
+  "TURTLEBOT3_MODEL": "waffle"  // Options: burger, waffle, waffle_pi
+}
+```
+
+After changing configuration:
+1. Press `F1` in VS Code
+2. Select "Dev Containers: Rebuild Container"
+3. Wait for the rebuild to complete
+
+### Change VNC port
+
+If port 6080 is already in use, edit `.devcontainer/devcontainer.json`:
+
+```json
+"forwardPorts": [6081, 5901],  // Changed from 6080 to 6081
+"portsAttributes": {
+  "6081": {  // Update this too
+    "label": "Desktop (noVNC)",
+    "onAutoForward": "openBrowser"
+  }
+}
+```
+
+Then access the desktop at `http://localhost:6081`
+
+## Troubleshooting installation
+
+### Build fails with network errors
+
+**Solution:**
+```bash
+# Check internet connection
+ping google.com
+ping packages.osrfoundation.org
+
+# Rebuild without cache
+# Press F1 → "Dev Containers: Rebuild Container Without Cache"
+```
+
+### Build fails with disk space errors
+
+**Solution:**
+```bash
+# Clean up Docker to free space
+docker system df  # Check usage
+docker image prune -a  # Remove unused images
+docker volume prune  # Remove unused volumes
+docker system prune -a --volumes  # Remove everything unused
+```
+
+### Container starts but packages missing
+
+**Solution:**
+```bash
+# Manually run post-create script
+cd /workspace/turtlebot3_ws
+bash .devcontainer/post-create.sh
+
+# Rebuild workspace
+colcon build --symlink-install
+source install/setup.bash
+```
+
+### Port forwarding not working
+
+**Solution:**
+1. In VS Code, open the Ports tab (View → Ports)
+2. Verify port 6080 is listed and forwarded
+3. Click the port number to open in browser
+4. If needed, manually forward: Click "Forward a Port" and enter 6080
+
+<Warning>
+  If problems persist, try the complete reset procedure: stop all containers, remove them, prune Docker, restart Docker Desktop, and rebuild the container without cache.
+</Warning>
+
+## Next steps
+
+With the installation complete, you're ready to launch your first simulation! Proceed to the [quick start guide](/quickstart) to run TurtleBot3 in Gazebo.

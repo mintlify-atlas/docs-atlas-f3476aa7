@@ -1,80 +1,407 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: Quick start
+description: Launch your first TurtleBot3 simulation and start controlling the robot in minutes
 ---
 
-## Get started in three steps
+## Overview
 
-Get your documentation site running locally and make your first customization.
+This guide will help you launch your first TurtleBot3 simulation in Gazebo and control the robot using keyboard teleoperation. The entire process takes less than 5 minutes once the container is built.
 
-### Step 1: Set up your local environment
+<Info>
+  Make sure you've completed the [installation](/installation) steps before proceeding.
+</Info>
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+## Verify setup
 
-### Step 2: Deploy your changes
+Before launching the simulation, verify that everything is properly configured:
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+```bash
+bash verify-setup.sh
+```
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+You should see green checkmarks for all critical tests. If any tests fail, refer to the installation troubleshooting section.
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+## Launch your first simulation
 
-### Step 3: Go live
+Let's start with a simple empty world to verify everything works.
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+<Steps>
+  <Step title="Open terminal in VS Code">
+    The terminal in VS Code is already connected to the container. If you need a new terminal, press `` Ctrl+` `` or select Terminal → New Terminal
+  </Step>
+  <Step title="Launch Gazebo with TurtleBot3">
+    ```bash
+    tb3_empty
+    ```
+    This starts Gazebo Harmonic with the TurtleBot3 Burger robot in an empty world.
+  </Step>
+  <Step title="Wait for Gazebo to initialize">
+    The first launch takes 30-60 seconds as Gazebo downloads models and initializes. Subsequent launches are much faster.
+  </Step>
+  <Step title="Access the GUI">
+    Open your web browser and navigate to:
+    ```
+    http://localhost:6080
+    ```
+    Password: `ros`
+  </Step>
+</Steps>
+
+You should now see a full Linux desktop with Gazebo running and the TurtleBot3 robot visible in the simulation!
+
+<Note>
+  The noVNC desktop may take 30-90 seconds to fully initialize on first access. If you see a black screen, wait a moment and refresh your browser.
+</Note>
+
+## Control the robot
+
+Now that Gazebo is running, let's control the robot using keyboard teleoperation.
+
+<Steps>
+  <Step title="Open a second terminal">
+    In VS Code, press `` Ctrl+` `` or click the `+` icon in the terminal panel to open a new terminal
+  </Step>
+  <Step title="Start teleoperation">
+    ```bash
+    tb3_teleop
+    ```
+    This launches the keyboard control node
+  </Step>
+  <Step title="Control the robot">
+    Use these keys to move the robot:
+    - `i` - Move forward
+    - `,` - Move backward  
+    - `j` - Rotate left
+    - `l` - Rotate right
+    - `k` - Stop
+    - `u` - Forward + left
+    - `o` - Forward + right
+    - `m` - Backward + left
+    - `.` - Backward + right
+  </Step>
+  <Step title="Adjust speed (optional)">
+    - `w` - Increase linear speed
+    - `x` - Decrease linear speed
+    - `a` - Increase angular speed
+    - `d` - Decrease angular speed
+  </Step>
+</Steps>
+
+<Warning>
+  Make sure the teleoperation terminal window is focused (clicked) for keyboard input to work.
+</Warning>
+
+## Explore different worlds
+
+The container includes three pre-configured simulation environments:
+
+<CodeGroup>
+
+```bash Empty world
+# Simple empty world - good for basic testing
+tb3_empty
+```
+
+```bash TurtleBot3 world
+# Includes obstacles for navigation testing
+tb3_world
+```
+
+```bash House environment
+# Complex indoor space for advanced testing
+tb3_house
+```
+
+</CodeGroup>
+
+### Understanding the command aliases
+
+These shortcuts expand to full ROS2 launch commands:
+
+```bash
+# tb3_empty expands to:
+ros2 launch turtlebot3_gazebo empty_world.launch.py
+
+# tb3_world expands to:
+ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py
+
+# tb3_house expands to:
+ros2 launch turtlebot3_gazebo turtlebot3_house.launch.py
+
+# tb3_teleop expands to:
+ros2 run turtlebot3_teleop teleop_keyboard
+```
+
+## Access the desktop environment
+
+The container provides a full Linux desktop accessible through your browser:
+
+<Steps>
+  <Step title="Open browser">
+    Navigate to `http://localhost:6080`
+  </Step>
+  <Step title="Enter password">
+    When prompted, enter: `ros`
+  </Step>
+  <Step title="Explore the desktop">
+    You now have access to:
+    - Gazebo simulator
+    - RViz2 for visualization
+    - Terminal applications
+    - File manager
+    - Any GUI tools you need
+  </Step>
+</Steps>
+
+### Alternative VNC access
+
+You can also use a standalone VNC client for better performance:
+
+```bash
+# Connect to: localhost:5901
+# Password: ros
+```
+
+Recommended VNC clients:
+- **Windows**: TigerVNC, RealVNC
+- **macOS**: Built-in Screen Sharing, TigerVNC
+- **Linux**: Remmina, TigerVNC
+
+## Inspect ROS2 topics
+
+While the simulation is running, you can inspect ROS2 topics and nodes:
+
+```bash
+# List all active topics
+ros2 topic list
+
+# View robot sensor data (laser scan)
+ros2 topic echo /scan
+
+# Check odometry data
+ros2 topic echo /odom
+
+# List all running nodes
+ros2 node list
+
+# Get info about a specific node
+ros2 node info /turtlebot3_node
+
+# Check topic publish rate
+ros2 topic hz /scan
+```
+
+<Note>
+  These commands help you understand how ROS2 nodes communicate through topics. This is fundamental to ROS2 development.
+</Note>
+
+## Build a map with SLAM
+
+Now let's create a map of the environment using SLAM (Simultaneous Localization and Mapping).
+
+<Steps>
+  <Step title="Launch TurtleBot3 world">
+    **Terminal 1:**
+    ```bash
+    tb3_world
+    ```
+    This provides a more interesting environment with obstacles to map
+  </Step>
+  <Step title="Start SLAM">
+    **Terminal 2:**
+    ```bash
+    tb3_slam
+    ```
+    This launches Cartographer for SLAM. RViz2 will open automatically showing the map being built in real-time
+  </Step>
+  <Step title="Drive and explore">
+    **Terminal 3:**
+    ```bash
+    tb3_teleop
+    ```
+    Drive the robot slowly around the environment. Watch the map appear in RViz2 as you explore
+  </Step>
+  <Step title="Save the map">
+    Once you've mapped the entire environment, save it:
+    ```bash
+    mkdir -p ~/maps
+    ros2 run nav2_map_server map_saver_cli -f ~/maps/my_map
+    ```
+    This creates two files: `my_map.pgm` (image) and `my_map.yaml` (metadata)
+  </Step>
+</Steps>
+
+<Info>
+  Move the robot slowly and systematically to build an accurate map. Fast movements can reduce map quality.
+</Info>
+
+## Autonomous navigation
+
+Use your saved map for autonomous navigation with Navigation2.
+
+<Steps>
+  <Step title="Launch simulation">
+    **Terminal 1:**
+    ```bash
+    tb3_world
+    ```
+  </Step>
+  <Step title="Start navigation with your map">
+    **Terminal 2:**
+    ```bash
+    ros2 launch turtlebot3_navigation2 navigation2.launch.py \
+      use_sim_time:=True \
+      map:=$HOME/maps/my_map.yaml
+    ```
+    RViz2 will open with navigation tools
+  </Step>
+  <Step title="Set initial pose">
+    In RViz2 (via VNC at `http://localhost:6080`):
+    1. Click the "2D Pose Estimate" button in the toolbar
+    2. Click on the map where the robot is currently located
+    3. Drag to set the robot's orientation
+  </Step>
+  <Step title="Set navigation goal">
+    1. Click the "Navigation2 Goal" button in the toolbar
+    2. Click on your desired destination on the map
+    3. Drag to set the final orientation
+    4. Watch the robot autonomously navigate to the goal, avoiding obstacles!
+  </Step>
+</Steps>
+
+<Warning>
+  The initial pose estimate must be accurate for navigation to work properly. If the robot doesn't navigate correctly, reset the pose estimate.
+</Warning>
+
+## Workspace commands
+
+Here are essential commands for working with the ROS2 workspace:
+
+<CodeGroup>
+
+```bash Build workspace
+# Full command
+cd /workspace/turtlebot3_ws
+colcon build --symlink-install
+
+# Or use alias
+cb
+```
+
+```bash Source workspace
+# Full command
+source /workspace/turtlebot3_ws/install/setup.bash
+
+# Or use alias
+sb
+```
+
+```bash Clean rebuild
+# Remove build artifacts
+cd /workspace/turtlebot3_ws
+rm -rf build install log
+
+# Rebuild
+colcon build --symlink-install
+```
+
+```bash Build specific package
+cd /workspace/turtlebot3_ws
+colcon build --packages-select turtlebot3_gazebo
+```
+
+</CodeGroup>
+
+## Troubleshooting
+
+### Gazebo won't start
+
+**Solution:**
+```bash
+# Kill any existing Gazebo processes
+pkill -9 gz
+pkill -9 gzserver
+pkill -9 gzclient
+
+# Try again
+tb3_empty
+```
+
+### No robot appears in Gazebo
+
+**Solution:**
+```bash
+# Verify environment variable
+echo $TURTLEBOT3_MODEL
+# Should output: burger
+
+# If empty, set it
+export TURTLEBOT3_MODEL=burger
+
+# Source workspace and retry
+sb
+tb3_empty
+```
+
+### VNC shows black screen
+
+**Solution:**
+1. Wait 30-90 seconds for desktop to initialize
+2. Refresh your browser
+3. If still black, restart VNC:
+   ```bash
+   sudo supervisorctl restart desktop-lite
+   ```
+4. Wait 30 seconds and refresh browser
+
+### Graphics issues or crashes
+
+**Solution:**
+```bash
+# Use software rendering
+export LIBGL_ALWAYS_SOFTWARE=1
+tb3_empty
+
+# Or use the software rendering aliases
+tb3_empty_sw
+tb3_world_sw
+tb3_house_sw
+```
+
+### ROS2 topics not visible
+
+**Solution:**
+```bash
+# Source the workspace
+source /opt/ros/jazzy/setup.bash
+source /workspace/turtlebot3_ws/install/setup.bash
+
+# Or use alias
+sb
+
+# Check if simulation is running
+ros2 node list
+```
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
+Now that you've successfully launched and controlled TurtleBot3, you can:
 
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Learn ROS2 development" icon="code">
+    Create custom packages and nodes in the [development guide](/development/creating-packages)
+  </Card>
+  <Card title="Explore advanced features" icon="robot">
+    Try custom worlds, different robot models, and advanced navigation scenarios
+  </Card>
+  <Card title="Read ROS2 documentation" icon="book">
+    Visit [docs.ros.org/en/jazzy](https://docs.ros.org/en/jazzy/) for comprehensive ROS2 tutorials
+  </Card>
+  <Card title="Join the community" icon="users">
+    Ask questions on [ROS Discourse](https://discourse.ros.org/) and contribute to the project
+  </Card>
 </CardGroup>
 
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>
+<Info>
+  The workspace at `/workspace/turtlebot3_ws` is mounted from your host machine. All your code and files persist even if you delete the container.
+</Info>

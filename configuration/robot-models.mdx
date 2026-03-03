@@ -1,0 +1,181 @@
+---
+title: Robot models
+description: Switching between TurtleBot3 models (burger, waffle, waffle_pi)
+---
+
+The TurtleBot3 platform comes in three hardware configurations. This container supports all three models for simulation.
+
+## Available models
+
+The `TURTLEBOT3_MODEL` environment variable determines which robot configuration is loaded in simulations.
+
+### Burger
+
+- **Default model** in this container
+- Smallest and most affordable TurtleBot3
+- 2-wheel differential drive
+- LiDAR sensor (360° laser scanner)
+- IMU sensor
+- Ideal for learning and basic navigation
+
+### Waffle
+
+- Larger platform with more sensors
+- 2-wheel differential drive  
+- LiDAR sensor
+- Intel RealSense R200 camera
+- IMU sensor
+- Better for advanced navigation and vision tasks
+
+### Waffle Pi
+
+- Similar to Waffle but with Raspberry Pi Camera
+- 2-wheel differential drive
+- LiDAR sensor  
+- Raspberry Pi Camera v2
+- IMU sensor
+- Alternative to Waffle with different camera hardware
+
+## Current model configuration
+
+The default model is set in `.devcontainer/devcontainer.json:49-57`:
+
+```json
+"remoteEnv": {
+  "DISPLAY": ":1",
+  "ROS_DOMAIN_ID": "30",
+  "TURTLEBOT3_MODEL": "burger",
+  "RMW_IMPLEMENTATION": "rmw_cyclonedds_cpp",
+  "GZ_VERSION": "harmonic",
+  "QT_QPA_PLATFORM": "xcb",
+  "LIBGL_ALWAYS_SOFTWARE": "${localEnv:LIBGL_ALWAYS_SOFTWARE:0}"
+}
+```
+
+## Changing the model
+
+### Method 1: Rebuild container (permanent)
+
+To permanently change the model:
+
+1. Edit `.devcontainer/devcontainer.json`
+2. Change the `TURTLEBOT3_MODEL` value:
+
+```json
+"remoteEnv": {
+  "TURTLEBOT3_MODEL": "waffle"  // Options: burger, waffle, waffle_pi
+}
+```
+
+3. Rebuild the container:
+   - Press `F1` in VS Code
+   - Select **Dev Containers: Rebuild Container**
+   - Wait for rebuild to complete (5-10 minutes)
+
+<Warning>
+Rebuilding the container will stop all running processes and re-run the build scripts. Any unsaved work in terminals will be lost.
+</Warning>
+
+### Method 2: Set per-session (temporary)
+
+To temporarily use a different model in your current terminal session:
+
+```bash
+export TURTLEBOT3_MODEL=waffle
+```
+
+Then launch your simulation:
+
+```bash
+tb3_empty  # Will now spawn the waffle model
+```
+
+<Info>
+This method only affects the current terminal. Open a new terminal and it will revert to the default model.
+</Info>
+
+### Method 3: Set per-launch (one-time)
+
+Override the model for a single launch:
+
+```bash
+TURTLEBOT3_MODEL=waffle_pi ros2 launch turtlebot3_gazebo empty_world.launch.py
+```
+
+## Verifying the active model
+
+Check which model is currently configured:
+
+```bash
+echo $TURTLEBOT3_MODEL
+```
+
+This should output one of: `burger`, `waffle`, or `waffle_pi`
+
+## Model differences in simulation
+
+### Visual differences
+
+- **Burger**: Compact, circular base
+- **Waffle**: Larger, square base with camera mount
+- **Waffle Pi**: Similar to Waffle with different camera
+
+### Sensor topic differences
+
+All models publish:
+- `/scan` - LiDAR data
+- `/odom` - Odometry
+- `/imu` - IMU data
+- `/cmd_vel` - Velocity commands (input)
+
+Waffle and Waffle Pi additionally publish:
+- `/camera/image_raw` - Camera images
+- `/camera/camera_info` - Camera calibration
+
+### Performance differences
+
+The Waffle and Waffle Pi models require slightly more computational resources due to camera simulation.
+
+## Model files location
+
+Model descriptions are stored in the TurtleBot3 source:
+
+```
+/workspace/turtlebot3_ws/src/turtlebot3/turtlebot3_description/
+├── urdf/
+│   ├── turtlebot3_burger.urdf
+│   ├── turtlebot3_waffle.urdf
+│   └── turtlebot3_waffle_pi.urdf
+```
+
+## Troubleshooting
+
+### No robot appears in Gazebo
+
+**Symptom**: Gazebo launches but the world is empty
+
+**Solution**:
+1. Verify the model is set:
+   ```bash
+   echo $TURTLEBOT3_MODEL
+   ```
+2. If empty, set it:
+   ```bash
+   export TURTLEBOT3_MODEL=burger
+   ```
+3. Relaunch the simulation
+
+### Wrong model appears
+
+**Symptom**: Expected Waffle but Burger appeared
+
+**Solution**: The environment variable may not be set in the terminal you're using. Either:
+- Source your bashrc: `source ~/.bashrc`
+- Export the model manually: `export TURTLEBOT3_MODEL=waffle`
+- Restart the terminal
+
+### Model mismatch errors
+
+**Symptom**: ROS2 topics don't match expected model
+
+**Solution**: Make sure all terminals use the same model. Run `echo $TURTLEBOT3_MODEL` in each terminal and ensure they match.

@@ -1,0 +1,121 @@
+---
+title: VNC and display issues
+description: Fix VNC black screen, password problems, and resolution issues
+---
+
+Resolve issues with the VNC desktop interface used to access Gazebo and RViz2.
+
+## VNC shows black screen
+
+**Symptoms:**
+- VNC loads but shows only black screen
+- No desktop visible
+
+<Accordion title="Wait for desktop initialization">
+  The desktop environment can take time to start:
+  
+  - Wait 30-90 seconds after container starts
+  - Refresh the browser page
+  - Look for the desktop background and taskbar to appear
+</Accordion>
+
+<Accordion title="Restart VNC server">
+  ```bash
+  sudo supervisorctl restart desktop-lite
+  # Wait 30 seconds, then refresh browser
+  ```
+  
+  The desktop-lite service manages the VNC server and desktop environment.
+</Accordion>
+
+<Accordion title="Check DISPLAY variable">
+  ```bash
+  echo $DISPLAY
+  # Should show: :1
+  
+  # If not set:
+  export DISPLAY=:1
+  ```
+  
+  The DISPLAY variable tells applications which X server to use. It should be set to `:1` for VNC.
+</Accordion>
+
+## VNC password not working
+
+The default password is `ros`. If it's not working:
+
+```bash
+# Reset VNC password
+rm -rf ~/.vnc/passwd
+vncpasswd
+# Enter: ros
+# Verify: ros
+# View-only: n
+
+# Restart VNC
+sudo supervisorctl restart desktop-lite
+```
+
+Wait 30 seconds after restarting before attempting to connect.
+
+## Display resolution wrong
+
+If the VNC display resolution doesn't match your screen:
+
+<Steps>
+  <Step title="Stop VNC server">
+    ```bash
+    vncserver -kill :1
+    ```
+  </Step>
+  
+  <Step title="Start with custom resolution">
+    **For full HD displays:**
+    ```bash
+    vncserver :1 -geometry 1920x1080 -depth 24
+    ```
+    
+    **For smaller screens:**
+    ```bash
+    vncserver :1 -geometry 1280x720 -depth 24
+    ```
+  </Step>
+  
+  <Step title="Refresh browser">
+    Reload http://localhost:6080 to connect with the new resolution.
+  </Step>
+</Steps>
+
+## Desktop appears frozen
+
+If the desktop is unresponsive:
+
+1. **Check container resources** - the container may be running out of memory
+2. **Check CPU usage** with `top` command
+3. **Restart the desktop service**:
+   ```bash
+   sudo supervisorctl restart desktop-lite
+   ```
+4. **Restart the container** if the service restart doesn't help
+
+## Mouse or keyboard not responding in VNC
+
+1. **Click inside the VNC window** to ensure it has focus
+2. **Check browser compatibility** - Chrome and Firefox work best
+3. **Try a native VNC client** instead of the browser:
+   - Connect to `localhost:5901`
+   - Password: `ros`
+4. **Disable browser extensions** that might interfere with input
+
+## Applications won't launch in VNC
+
+If clicking application icons does nothing:
+
+1. **Open a terminal in VNC** and launch manually
+2. **Check for error messages** in the terminal output
+3. **Verify DISPLAY is set**: `echo $DISPLAY` (should be `:1`)
+4. **Check the application is installed**:
+   ```bash
+   which rviz2
+   which gazebo
+   ```

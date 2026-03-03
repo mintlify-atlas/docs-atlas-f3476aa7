@@ -1,0 +1,229 @@
+---
+title: Contribution guidelines
+description: How to contribute to the TurtleBot3 ROS2 Jazzy dev container project
+---
+
+Contributions are welcome! This project aims to provide an accessible, platform-agnostic ROS2 development environment.
+
+## Ways to contribute
+
+<CardGroup cols={3}>
+  <Card title="Report issues" icon="bug">
+    Found a bug or problem? Open an issue with details
+  </Card>
+  
+  <Card title="Suggest features" icon="lightbulb">
+    Have an idea for improvement? Create a feature request
+  </Card>
+  
+  <Card title="Submit pull requests" icon="code-pull-request">
+    Fix bugs or add features with code contributions
+  </Card>
+</CardGroup>
+
+## Reporting issues
+
+<Info>
+  Before creating a new issue, search existing issues to avoid duplicates.
+</Info>
+
+### Bug reports
+
+When reporting bugs, include:
+
+1. **Environment information**:
+   - Operating system (Windows/macOS/Linux version)
+   - Docker version (`docker --version`)
+   - VS Code version
+   - Dev Containers extension version
+
+2. **Problem description**:
+   - What you were trying to do
+   - What happened instead
+   - Steps to reproduce the issue
+
+3. **Error messages**:
+   - Complete error output from terminal
+   - Relevant log files
+   - Screenshots if applicable
+
+4. **What you've tried**:
+   - Troubleshooting steps already attempted
+   - Workarounds that did or didn't work
+
+### Feature requests
+
+For feature suggestions, describe:
+
+- **Use case**: What problem does this solve?
+- **Proposed solution**: How should it work?
+- **Alternatives considered**: Other approaches you've thought about
+- **Impact**: Who would benefit from this feature?
+
+## Submitting pull requests
+
+### Development workflow
+
+1. **Fork the repository**
+   
+   Create your own fork of the project:
+   ```bash
+   # On GitHub, click "Fork" button
+   git clone https://github.com/YOUR-USERNAME/turtlebot3_jazzy_devcontainer.git
+   cd turtlebot3_jazzy_devcontainer
+   ```
+
+2. **Create a feature branch**
+   
+   Use descriptive branch names:
+   ```bash
+   git checkout -b feature/add-slam-toolbox
+   # or
+   git checkout -b fix/vnc-connection-issue
+   ```
+
+3. **Make your changes**
+   
+   - Follow the project's coding standards
+   - Test changes in the dev container
+   - Update documentation as needed
+
+4. **Commit your changes**
+   
+   Write clear commit messages:
+   ```bash
+   git add .
+   git commit -m "Add SLAM Toolbox integration
+   
+   - Install slam_toolbox package in Dockerfile
+   - Add launch alias for SLAM Toolbox
+   - Update documentation with usage instructions"
+   ```
+
+5. **Push to your fork**
+   
+   ```bash
+   git push origin feature/add-slam-toolbox
+   ```
+
+6. **Submit a pull request**
+   
+   - Go to your fork on GitHub
+   - Click "New Pull Request"
+   - Provide a clear description of changes
+   - Reference any related issues
+
+### Pull request guidelines
+
+<Info>
+  All pull requests should maintain the platform-agnostic design, working identically on Windows, macOS, and Linux.
+</Info>
+
+Your PR should:
+
+- **Solve a specific problem**: Focus on one feature or fix per PR
+- **Include tests**: Verify changes work in the dev container
+- **Update documentation**: Add or modify docs for new features
+- **Maintain compatibility**: Ensure cross-platform functionality
+- **Follow conventions**: Use ROS2 naming and coding standards
+
+## Development standards
+
+### Docker best practices
+
+- **Minimize image size**: Use multi-stage builds and remove temporary files
+- **Layer caching**: Order Dockerfile commands from least to most frequently changed
+- **Security**: Don't include secrets or credentials in images
+- **Documentation**: Comment complex Dockerfile commands
+
+### ROS2 conventions
+
+Follow standard ROS2 practices:
+
+- **Package naming**: Use lowercase with underscores (e.g., `my_package`)
+- **Node naming**: Descriptive names without underscores (e.g., `MapServer`)
+- **Topic naming**: Lowercase with forward slashes (e.g., `/robot/sensors/scan`)
+- **Code style**: Follow [ROS2 style guide](https://docs.ros.org/en/jazzy/Contributing.html)
+
+### Documentation
+
+When adding features:
+
+- Update README.md with new functionality
+- Add examples and usage instructions
+- Document configuration options
+- Update troubleshooting section if needed
+
+## Testing guidelines
+
+### Manual testing checklist
+
+Before submitting a PR, verify:
+
+- [ ] Container builds successfully from scratch
+- [ ] All launch aliases work correctly
+- [ ] Gazebo simulations start without errors
+- [ ] ROS2 nodes communicate properly
+- [ ] VNC access works (http://localhost:6080)
+- [ ] Documentation is accurate and complete
+
+### Platform testing
+
+Ideally test on multiple platforms:
+
+- **Windows**: Docker Desktop on Windows 10/11
+- **macOS**: Docker Desktop on Intel or Apple Silicon
+- **Linux**: Docker Engine on Ubuntu/Debian
+
+<Info>
+  If you can only test on one platform, mention this in your PR description.
+</Info>
+
+## Code review process
+
+1. **Submission**: You submit a pull request
+2. **Review**: Maintainers review code and provide feedback
+3. **Discussion**: Address comments and questions
+4. **Revision**: Make requested changes
+5. **Approval**: Maintainer approves changes
+6. **Merge**: PR is merged into main branch
+
+### Review criteria
+
+Pull requests are evaluated on:
+
+- **Functionality**: Does it work as intended?
+- **Quality**: Is the code clean and maintainable?
+- **Documentation**: Are changes well-documented?
+- **Compatibility**: Does it work across platforms?
+- **Impact**: Does it align with project goals?
+
+## Project maintainer
+
+**Prakash Aryan**
+- GitHub: [@prakash-aryan](https://github.com/prakash-aryan)
+- Email: prakash.aryan@unibe.ch
+
+<Card title="Open an Issue" icon="github" href="https://github.com/prakash-aryan/turtlebot3_jazzy_devcontainer/issues">
+  Report bugs, request features, or ask questions
+</Card>
+
+## License considerations
+
+This project integrates several open-source components:
+
+- **ROS2 Jazzy**: Apache 2.0 License
+- **Gazebo**: Apache 2.0 License  
+- **TurtleBot3**: Apache 2.0 License
+
+Contributions should maintain compatibility with these licenses.
+
+## Recognition
+
+Contributors are recognized in:
+
+- GitHub contributors list
+- Release notes for significant contributions
+- Project acknowledgments
+
+Thank you for helping improve this project!

@@ -1,0 +1,343 @@
+---
+title: VNC settings
+description: Configuring VNC ports, password, and desktop settings for browser-based GUI access
+---
+
+The container includes a VNC server with noVNC web interface for accessing Gazebo, RViz, and other GUI applications through your browser.
+
+## VNC configuration
+
+VNC is set up using the Dev Containers desktop-lite feature.
+
+### Default settings
+
+From `.devcontainer/devcontainer.json:33-37`:
+
+```json
+"features": {
+  "ghcr.io/devcontainers/features/desktop-lite:1": {
+    "password": "ros",
+    "webPort": "6080",
+    "vncPort": "5901"
+  }
+}
+```
+
+- **noVNC web port**: 6080 (browser access)
+- **VNC port**: 5901 (VNC client access)
+- **Password**: `ros`
+- **Display**: `:1`
+
+### Port forwarding
+
+Ports are automatically forwarded from `.devcontainer/devcontainer.json:40-47`:
+
+```json
+"forwardPorts": [6080, 5901],
+
+"portsAttributes": {
+  "6080": {
+    "label": "Desktop (noVNC)",
+    "onAutoForward": "openBrowser"
+  }
+}
+```
+
+The browser automatically opens to `http://localhost:6080` when the container starts.
+
+## Accessing the desktop
+
+### Method 1: Browser (noVNC) - Recommended
+
+1. Open your browser
+2. Navigate to: `http://localhost:6080`
+3. Click **Connect**
+4. Enter password: `ros`
+5. You'll see the Ubuntu desktop with any running GUI applications
+
+<Info>
+noVNC works on any device with a web browser - no VNC client installation required. This includes tablets and phones.
+</Info>
+
+### Method 2: VNC client
+
+For better performance, use a native VNC client:
+
+1. Install a VNC client:
+   - **Windows**: [TightVNC](https://www.tightvnc.com/) or [RealVNC](https://www.realvnc.com/)
+   - **macOS**: Built-in Screen Sharing or [RealVNC](https://www.realvnc.com/)
+   - **Linux**: `vncviewer` (install with `sudo apt install tigervnc-viewer`)
+
+2. Connect to: `localhost:5901`
+3. Enter password: `ros`
+
+## Changing VNC ports
+
+If the default ports conflict with other services on your system.
+
+### Changing the noVNC web port
+
+Edit `.devcontainer/devcontainer.json`:
+
+```json
+"features": {
+  "ghcr.io/devcontainers/features/desktop-lite:1": {
+    "password": "ros",
+    "webPort": "6081",  // Changed from 6080
+    "vncPort": "5901"
+  }
+},
+
+"forwardPorts": [6081, 5901],  // Update here too
+
+"portsAttributes": {
+  "6081": {  // Update here as well
+    "label": "Desktop (noVNC)",
+    "onAutoForward": "openBrowser"
+  }
+}
+```
+
+Rebuild the container:
+- Press `F1`
+- Select **Dev Containers: Rebuild Container**
+
+Access at: `http://localhost:6081`
+
+### Changing the VNC port
+
+Similarly, edit the `vncPort` value:
+
+```json
+"vncPort": "5902"  // Changed from 5901
+```
+
+Update `forwardPorts` accordingly:
+
+```json
+"forwardPorts": [6080, 5902]
+```
+
+<Warning>
+Changing VNC ports requires rebuilding the container, which will stop all running processes.
+</Warning>
+
+## Changing the VNC password
+
+### Method 1: Rebuild with new password
+
+Edit `.devcontainer/devcontainer.json`:
+
+```json
+"features": {
+  "ghcr.io/devcontainers/features/desktop-lite:1": {
+    "password": "your_new_password",
+    "webPort": "6080",
+    "vncPort": "5901"
+  }
+}
+```
+
+Rebuild: `F1` → **Dev Containers: Rebuild Container**
+
+### Method 2: Change in running container
+
+Inside the container:
+
+```bash
+# Remove old password file
+rm -rf ~/.vnc/passwd
+
+# Set new password
+vncpasswd
+# Enter new password twice
+# Would you like to enter a view-only password? n
+
+# Restart VNC server
+sudo supervisorctl restart desktop-lite
+```
+
+## Display settings
+
+The display variable is set in `devcontainer.json:50`:
+
+```json
+"remoteEnv": {
+  "DISPLAY": ":1"
+}
+```
+
+This routes GUI applications to the VNC server.
+
+### Changing display resolution
+
+The default resolution is determined by your browser window size with noVNC, or can be set manually with a VNC client.
+
+To change the default resolution, you can modify VNC server startup parameters:
+
+```bash
+# Stop VNC server
+vncserver -kill :1
+
+# Start with custom resolution
+vncserver :1 -geometry 1920x1080 -depth 24
+```
+
+Common resolutions:
+- `1920x1080` - Full HD
+- `1280x720` - HD
+- `1600x900` - Laptop-friendly
+- `2560x1440` - 2K
+
+## Troubleshooting
+
+### Cannot access noVNC at localhost:6080
+
+**Symptom**: Browser shows "connection refused" or "can't connect"
+
+**Solution 1 - Check port forwarding**:
+1. In VS Code, open the **Ports** panel (View → Ports)
+2. Verify port 6080 is listed and forwarded
+3. If not, click **Forward a Port** and enter `6080`
+
+**Solution 2 - Restart VNC server**:
+```bash
+sudo supervisorctl restart desktop-lite
+# Wait 30 seconds, then refresh browser
+```
+
+**Solution 3 - Check VNC is running**:
+```bash
+ps aux | grep vnc
+sudo supervisorctl status desktop-lite
+```
+
+### VNC shows black screen
+
+**Symptom**: noVNC connects but shows only a black screen
+
+**Solution**:
+1. Wait 30-90 seconds - the desktop can take time to initialize on first start
+2. Refresh your browser page
+3. Restart the VNC server:
+   ```bash
+   sudo supervisorctl restart desktop-lite
+   ```
+
+### Wrong password
+
+**Symptom**: VNC rejects the password
+
+**Solution**: The default password is `ros` (all lowercase). If changed, refer to the "Changing the VNC password" section above.
+
+### Port already in use
+
+**Symptom**: "Port 6080 is already allocated" or "address already in use"
+
+**Solution 1 - Find conflicting process**:
+
+**Windows (PowerShell)**:
+```powershell
+netstat -ano | findstr :6080
+# Note the PID (last column)
+taskkill /PID <PID> /F
+```
+
+**macOS/Linux**:
+```bash
+lsof -i :6080
+kill <PID>
+```
+
+**Solution 2 - Use different port**: See "Changing VNC ports" above
+
+### Display variable not set
+
+**Symptom**: GUI apps show "cannot open display" error
+
+**Solution**:
+```bash
+echo $DISPLAY  # Should show :1
+
+# If empty, set it:
+export DISPLAY=:1
+
+# Make permanent:
+echo 'export DISPLAY=:1' >> ~/.bashrc
+```
+
+### VNC performance is slow
+
+**Symptom**: Laggy mouse, slow screen updates in browser
+
+**Solutions**:
+
+1. **Use native VNC client instead of noVNC** - Browser-based VNC has more overhead
+
+2. **Lower display quality in noVNC**:
+   - Click the settings icon in noVNC sidebar
+   - Adjust Quality slider (lower = faster)
+   - Enable "Compression level"
+
+3. **Reduce display resolution** - See "Changing display resolution" above
+
+4. **Allocate more resources** - See [Container resources](/configuration/container-resources)
+
+### GUI apps don't appear in VNC
+
+**Symptom**: Launch Gazebo but it doesn't show in VNC desktop
+
+**Solution**:
+1. Verify `DISPLAY` is set:
+   ```bash
+   echo $DISPLAY  # Must be :1
+   ```
+2. Check if the process is running:
+   ```bash
+   ps aux | grep gazebo
+   ```
+3. Check for errors in the terminal where you launched the app
+4. Try launching from within the VNC desktop terminal instead
+
+## Advanced configuration
+
+### Disable auto-opening browser
+
+Edit `.devcontainer/devcontainer.json:42-47`:
+
+```json
+"portsAttributes": {
+  "6080": {
+    "label": "Desktop (noVNC)",
+    "onAutoForward": "ignore"  // Changed from "openBrowser"
+  }
+}
+```
+
+### Multiple displays
+
+To run multiple VNC servers:
+
+```bash
+# Start second VNC server on display :2
+vncserver :2 -geometry 1920x1080 -depth 24
+
+# Use it for specific apps
+DISPLAY=:2 gazebo
+```
+
+### Restart VNC service
+
+```bash
+# Check status
+sudo supervisorctl status desktop-lite
+
+# Restart
+sudo supervisorctl restart desktop-lite
+
+# Stop
+sudo supervisorctl stop desktop-lite
+
+# Start
+sudo supervisorctl start desktop-lite
+```

@@ -1,0 +1,290 @@
+---
+title: Debugging ROS2 nodes and topics
+description: Tools and commands for debugging ROS2 applications and TurtleBot3 simulations
+---
+
+Learn how to debug ROS2 nodes, inspect topics, and troubleshoot issues in your TurtleBot3 development environment.
+
+## Debugging ROS2 topics
+
+### List all topics
+
+View all active ROS2 topics in the system:
+
+```bash
+ros2 topic list
+```
+
+Common TurtleBot3 topics include:
+- `/cmd_vel` - Velocity commands
+- `/scan` - LiDAR sensor data
+- `/odom` - Odometry data
+- `/imu` - Inertial measurement unit
+- `/camera/image_raw` - Camera feed
+
+### Echo topic data
+
+Monitor messages published to a topic in real-time:
+
+```bash
+ros2 topic echo /scan
+```
+
+This displays the sensor data as it's published.
+
+### Check topic frequency
+
+Measure how often messages are published:
+
+```bash
+ros2 topic hz /odom
+```
+
+Example output:
+```
+average rate: 30.001
+  min: 0.033s max: 0.034s std dev: 0.00012s window: 30
+```
+
+### Get topic information
+
+View topic type and publishers/subscribers:
+
+```bash
+ros2 topic info /scan
+```
+
+## Debugging ROS2 nodes
+
+### List all nodes
+
+Show all running ROS2 nodes:
+
+```bash
+ros2 node list
+```
+
+When TurtleBot3 simulation is running, you'll see nodes like:
+- `/turtlebot3_node`
+- `/gazebo`
+- `/teleop_keyboard` (when running teleop)
+
+### Get node information
+
+Inspect a specific node's publishers, subscribers, services, and actions:
+
+```bash
+ros2 node info /turtlebot3_node
+```
+
+This shows:
+- Subscriptions
+- Publications
+- Service servers
+- Service clients
+- Action servers
+- Action clients
+
+## Visualization with RViz2
+
+RViz2 provides 3D visualization of sensor data and robot state.
+
+### Launch RViz2
+
+Access the VNC desktop at http://localhost:6080 (password: `ros`), then:
+
+```bash
+rviz2
+```
+
+Or launch RViz2 from a terminal:
+
+```bash
+# In VNC desktop terminal
+rviz2
+```
+
+RViz2 is automatically launched with SLAM and navigation commands:
+
+```bash
+tb3_slam  # Opens RViz2 with SLAM visualization
+```
+
+## Checking environment variables
+
+Verify critical ROS2 environment variables:
+
+```bash
+# ROS2 distribution
+echo $ROS_DISTRO
+# Should output: jazzy
+
+# TurtleBot3 model
+echo $TURTLEBOT3_MODEL
+# Should output: burger
+
+# Gazebo version
+echo $GZ_VERSION
+# Should output: harmonic
+
+# ROS domain ID
+echo $ROS_DOMAIN_ID
+# Should output: 30
+```
+
+These variables are automatically set in `.bashrc` by the `post-create.sh` script.
+
+## Debugging Gazebo issues
+
+### Check Gazebo logs
+
+Review Gazebo server and client logs:
+
+```bash
+cat ~/.gz/gazebo/server.log
+cat ~/.gz/gazebo/client.log
+```
+
+### Kill stuck Gazebo processes
+
+If Gazebo won't start or close properly:
+
+```bash
+pkill -9 gz
+pkill -9 gzserver
+pkill -9 gzclient
+```
+
+Then restart your simulation:
+
+```bash
+tb3_empty
+```
+
+### Test GPU rendering
+
+Check if hardware GPU acceleration is available:
+
+```bash
+glxinfo | grep "direct rendering"
+```
+
+If it shows "No", use software rendering:
+
+```bash
+export LIBGL_ALWAYS_SOFTWARE=1
+tb3_empty
+```
+
+Or use the software rendering aliases:
+
+```bash
+tb3_empty_sw
+tb3_world_sw
+tb3_house_sw
+```
+
+### Clear Gazebo cache
+
+Reset Gazebo configuration if experiencing crashes:
+
+```bash
+rm -rf ~/.gz/
+tb3_empty
+```
+
+## Package debugging
+
+### Verify package installation
+
+Check if packages are correctly installed:
+
+```bash
+ros2 pkg list | grep turtlebot3
+```
+
+### Check package dependencies
+
+Verify all dependencies are installed:
+
+```bash
+cd /workspace/turtlebot3_ws
+rosdep check --from-paths src --ignore-src
+```
+
+### Review build logs
+
+Inspect build logs for errors:
+
+```bash
+cat /workspace/turtlebot3_ws/log/latest*/events.log
+```
+
+## Using the verification script
+
+Run the comprehensive setup verification script:
+
+```bash
+bash verify-setup.sh
+```
+
+This script checks:
+- ROS2 Jazzy installation
+- Gazebo Harmonic installation
+- Python 3 and colcon
+- TurtleBot3 packages
+- Navigation2 packages
+- Cartographer packages
+- Environment variables
+- Directory structure
+- Build status
+
+## Common debugging scenarios
+
+### No topics visible
+
+<Steps>
+  <Step title="Check ROS domain ID">
+    ```bash
+    echo $ROS_DOMAIN_ID
+    export ROS_DOMAIN_ID=30
+    ```
+  </Step>
+
+  <Step title="Source workspace">
+    ```bash
+    source /opt/ros/jazzy/setup.bash
+    source /workspace/turtlebot3_ws/install/setup.bash
+    ```
+  </Step>
+
+  <Step title="Verify simulation is running">
+    ```bash
+    ros2 node list
+    ```
+  </Step>
+</Steps>
+
+### Robot not moving
+
+<Steps>
+  <Step title="Check if teleop is publishing">
+    ```bash
+    ros2 topic hz /cmd_vel
+    ```
+    
+    Press keys in the teleop terminal and verify messages are being published.
+  </Step>
+
+  <Step title="Echo velocity commands">
+    ```bash
+    ros2 topic echo /cmd_vel
+    ```
+    
+    You should see velocity values when pressing movement keys.
+  </Step>
+
+  <Step title="Verify Gazebo is running">
+    Check the VNC desktop at http://localhost:6080 to see if Gazebo is displaying the robot.
+  </Step>
+</Steps>

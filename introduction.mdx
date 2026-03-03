@@ -1,0 +1,132 @@
+---
+title: Introduction
+description: Complete ROS2 Jazzy development environment with TurtleBot3 simulation in a cross-platform Dev Container
+---
+
+## Welcome to TurtleBot3 ROS2 Jazzy Dev Container
+
+This project provides a complete, ready-to-use ROS2 Jazzy development environment running inside a Docker container. No need to install ROS2, Gazebo, or manage dependencies on your host system—everything runs in an isolated, reproducible environment that works identically on Windows, macOS, and Linux.
+
+<CardGroup cols={2}>
+  <Card title="Prerequisites" icon="list-check" href="/prerequisites">
+    Required software and system requirements to get started
+  </Card>
+  <Card title="Installation" icon="download" href="/installation">
+    Step-by-step guide to install Docker, VS Code, and set up the project
+  </Card>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Launch your first TurtleBot3 simulation in minutes
+  </Card>
+  <Card title="Development" icon="code" href="/development">
+    Learn how to build packages and develop with ROS2
+  </Card>
+</CardGroup>
+
+## Features
+
+This development container comes fully equipped with everything you need for robotics development:
+
+- **ROS2 Jazzy** on Ubuntu 24.04 Noble with complete desktop installation
+- **Gazebo Harmonic** simulator with GPU support for realistic physics simulation
+- **TurtleBot3 Burger** robot packages ready to use
+- **Navigation2** stack for autonomous navigation
+- **SLAM** with Cartographer for mapping and localization
+- **noVNC Desktop** for browser-based GUI access at http://localhost:6080
+- **Pre-configured VS Code** extensions for ROS2, Python, and C++ development
+- **Platform-agnostic** design works seamlessly on Windows, macOS, and Linux
+
+## How it works
+
+### Technology stack
+
+**Docker Containers**: Lightweight, portable environments that package your entire development setup (OS, ROS2, Gazebo, dependencies) into a reproducible unit that runs identically everywhere.
+
+**VS Code Dev Containers**: Develop inside a Docker container seamlessly—your code editor, terminal, and debugger work as if running locally.
+
+**ROS2 (Robot Operating System)**: A flexible framework for robot software providing libraries and tools for robot application development.
+
+**Gazebo**: A 3D robot simulator with accurate physics, sensors, and actuator simulation.
+
+**noVNC**: Browser-based VNC client for accessing a full Linux desktop through your web browser without installing additional software.
+
+### Why use containers?
+
+<CardGroup cols={2}>
+  <Card title="Consistency" icon="check">
+    Everyone gets the exact same environment, eliminating "works on my machine" issues
+  </Card>
+  <Card title="Isolation" icon="shield">
+    No conflicts with other software on your system—keep your host clean
+  </Card>
+  <Card title="Portability" icon="laptop">
+    Works identically on Windows, macOS, and Linux without platform-specific changes
+  </Card>
+  <Card title="Version control" icon="git">
+    The entire environment is defined in code and can be versioned with your project
+  </Card>
+</CardGroup>
+
+### Data persistence
+
+Your workspace folder is "mounted" into the container:
+- Files you create and edit are saved on your real computer
+- Deleting the container doesn't delete your code
+- Files are accessible from both inside and outside the container
+
+<Note>
+  The container provides the environment, but your code lives safely on your host machine.
+</Note>
+
+## Environment configuration
+
+The development container automatically configures these environment variables:
+
+```bash
+ROS_DISTRO=jazzy                    # ROS2 version
+ROS_DOMAIN_ID=30                    # Network isolation
+TURTLEBOT3_MODEL=burger             # Robot model
+RMW_IMPLEMENTATION=rmw_cyclonedds_cpp # DDS implementation
+GZ_VERSION=harmonic                 # Gazebo version
+DISPLAY=:1                          # VNC display
+QT_QPA_PLATFORM=xcb                 # Qt platform
+```
+
+## Quick launch aliases
+
+The container includes pre-configured shortcuts for common tasks:
+
+| Alias | Description |
+|-------|-------------|
+| `cb` | Build workspace with colcon |
+| `sb` | Source workspace environment |
+| `tb3_empty` | Launch empty world |
+| `tb3_world` | Launch TurtleBot3 world (obstacles) |
+| `tb3_house` | Launch house environment |
+| `tb3_teleop` | Keyboard teleoperation control |
+| `tb3_slam` | Start SLAM with Cartographer |
+| `tb3_nav` | Start Navigation2 |
+
+## Next steps
+
+<Steps>
+  <Step title="Check prerequisites">
+    Verify your system meets the [requirements](/prerequisites) before installation
+  </Step>
+  <Step title="Install the tools">
+    Follow the [installation guide](/installation) to set up Docker and VS Code
+  </Step>
+  <Step title="Launch simulation">
+    Use the [quick start guide](/quickstart) to run your first TurtleBot3 simulation
+  </Step>
+</Steps>
+
+## Community and support
+
+- **GitHub Repository**: [prakash-aryan/turtlebot3_jazzy_devcontainer](https://github.com/prakash-aryan/turtlebot3_jazzy_devcontainer)
+- **ROS2 Documentation**: [docs.ros.org/en/jazzy](https://docs.ros.org/en/jazzy/)
+- **TurtleBot3 Manual**: [emanual.robotis.com](https://emanual.robotis.com/docs/en/platform/turtlebot3/overview/)
+- **Gazebo Documentation**: [gazebosim.org/docs](https://gazebosim.org/docs)
+
+<Info>
+  This project is maintained by [Prakash Aryan](https://github.com/prakash-aryan) and welcomes contributions from the community.
+</Info>

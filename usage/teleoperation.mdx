@@ -1,0 +1,271 @@
+---
+title: Teleoperation
+description: Manual keyboard control of the TurtleBot3 robot
+---
+
+Teleoperation allows you to manually control the TurtleBot3 robot using keyboard commands. This is essential for testing, exploring environments during SLAM, and verifying robot functionality.
+
+## Starting teleoperation
+
+### Using the alias
+
+The simplest way to start keyboard teleoperation:
+
+```bash
+tb3_teleop
+```
+
+### Using the full command
+
+Alternatively, use the complete ROS2 command:
+
+```bash
+ros2 run turtlebot3_teleop teleop_keyboard
+```
+
+<Note>
+Before starting teleoperation, ensure a simulation world is already running. The robot must exist in Gazebo before you can control it.
+</Note>
+
+## Keyboard controls
+
+Once teleoperation is active, use these keyboard keys to control the robot:
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| `i` | Move forward | Drives the robot straight ahead |
+| `,` | Move backward | Drives the robot in reverse |
+| `j` | Rotate left | Rotates the robot counter-clockwise |
+| `l` | Rotate right | Rotates the robot clockwise |
+| `k` | Stop | Immediately stops all robot movement |
+| `u` | Forward + left | Moves forward while turning left |
+| `o` | Forward + right | Moves forward while turning right |
+| `m` | Backward + left | Moves backward while turning left |
+| `.` | Backward + right | Moves backward while turning right |
+
+<Tip>
+Press `k` immediately if the robot behaves unexpectedly. This key stops all movement and is your emergency brake.
+</Tip>
+
+## Speed control
+
+Adjust the robot's velocity while teleoperation is running:
+
+| Key | Action | Description |
+|-----|--------|-------------|
+| `w` | Increase linear speed | Makes forward/backward movement faster |
+| `x` | Decrease linear speed | Makes forward/backward movement slower |
+| `a` | Increase angular speed | Makes rotation faster |
+| `d` | Decrease angular speed | Makes rotation slower |
+| `s` | Reset to default speed | Returns to default velocity settings |
+
+## Basic teleoperation workflow
+
+<Steps>
+  <Step title="Launch simulation">
+    Start a Gazebo world in the first terminal:
+    ```bash
+    tb3_empty
+    ```
+    Wait for Gazebo to fully load with the robot visible.
+  </Step>
+  
+  <Step title="Start teleoperation">
+    Open a second terminal and launch keyboard control:
+    ```bash
+    tb3_teleop
+    ```
+  </Step>
+  
+  <Step title="Control the robot">
+    Use the keyboard keys to move the robot:
+    - Press `i` to move forward
+    - Press `j` or `l` to rotate
+    - Press `k` to stop
+  </Step>
+  
+  <Step title="Observe in VNC">
+    Watch the robot movement in Gazebo through your browser at:
+    ```
+    http://localhost:6080
+    ```
+  </Step>
+</Steps>
+
+## Complete workflow example
+
+### Terminal 1: Launch simulation
+
+```bash
+tb3_world
+```
+
+Wait for the TurtleBot3 world to load completely.
+
+### Terminal 2: Start teleoperation
+
+```bash
+tb3_teleop
+```
+
+You'll see output similar to:
+
+```
+Control Your TurtleBot3!
+---------------------------
+Moving around:
+        u    i    o
+        j    k    l
+        m    ,    .
+
+w/x : increase/decrease linear velocity
+a/d : increase/decrease angular velocity
+s : force stop
+k : stop smoothly
+
+CTRL-C to quit
+```
+
+### In VNC browser (http://localhost:6080)
+
+Watch the robot respond to your keyboard commands in real-time within the Gazebo simulator.
+
+## Using teleoperation for SLAM
+
+Teleoperation is essential for creating maps with SLAM. Drive the robot slowly to explore and map the environment.
+
+<Steps>
+  <Step title="Launch simulation world">
+    ```bash
+    tb3_world
+    ```
+  </Step>
+  
+  <Step title="Start SLAM">
+    In a second terminal:
+    ```bash
+    tb3_slam
+    ```
+    RViz2 will open showing the map being built in real-time.
+  </Step>
+  
+  <Step title="Drive to explore">
+    In a third terminal:
+    ```bash
+    tb3_teleop
+    ```
+  </Step>
+  
+  <Step title="Map the environment">
+    Drive slowly using keyboard controls:
+    - Use `i` for forward movement
+    - Use `j` and `l` for smooth turns
+    - Avoid rapid movements for better map quality
+    - Cover all areas you want mapped
+  </Step>
+</Steps>
+
+<Tip>
+When mapping with SLAM, move slowly and smoothly. Rapid movements or high speeds can reduce map quality and accuracy.
+</Tip>
+
+## Best practices
+
+### Smooth control
+
+- **Press keys briefly**: Tap keys rather than holding them down for more precise control
+- **Use stop key frequently**: Press `k` between movements to avoid overshooting
+- **Start slow**: Begin with reduced speeds (press `x` and `d`) when learning
+
+### SLAM mapping tips
+
+- **Drive slowly**: Slower speeds produce better quality maps
+- **Smooth turns**: Use `u` and `o` for gradual curved paths instead of sharp rotations
+- **Complete coverage**: Ensure all areas are visible to the robot's sensors
+- **Return to start**: For best results, return to your starting position to close the loop
+
+### Safety
+
+- **Know your stop key**: `k` stops the robot immediately
+- **Monitor in VNC**: Always watch the robot in Gazebo while controlling
+- **Test in empty world first**: Practice in `tb3_empty` before complex environments
+
+## Troubleshooting
+
+### Robot doesn't respond to keys
+
+<Steps>
+  <Step title="Check simulation is running">
+    Verify Gazebo is running with the robot loaded:
+    ```bash
+    ros2 node list
+    ```
+    You should see TurtleBot3-related nodes.
+  </Step>
+  
+  <Step title="Verify topic connection">
+    Check that velocity commands are being published:
+    ```bash
+    ros2 topic echo /cmd_vel
+    ```
+    Press movement keys and confirm messages appear.
+  </Step>
+  
+  <Step title="Restart teleoperation">
+    Press `Ctrl+C` to stop teleop, then restart:
+    ```bash
+    tb3_teleop
+    ```
+  </Step>
+</Steps>
+
+### Keys don't work
+
+- **Focus the terminal**: Click on the teleoperation terminal window
+- **Check keyboard layout**: Ensure you're using a QWERTY keyboard layout
+- **Disable caps lock**: CAPS LOCK may interfere with key recognition
+
+### Robot moves erratically
+
+<Steps>
+  <Step title="Stop the robot">
+    Press `k` immediately to stop all movement.
+  </Step>
+  
+  <Step title="Reset velocity">
+    Press `s` to reset to default speed settings.
+  </Step>
+  
+  <Step title="Reduce speed">
+    Press `x` and `d` several times to reduce both linear and angular velocity.
+  </Step>
+  
+  <Step title="Test slowly">
+    Try gentle movements with the reduced speed.
+  </Step>
+</Steps>
+
+### Simulation lags
+
+- Allocate more resources to Docker (4+ CPU cores, 8GB+ RAM)
+- Use a simpler world like `tb3_empty`
+- Try software rendering mode: `tb3_empty_sw`
+- Close other resource-intensive applications
+
+## Advanced usage
+
+### Custom velocity limits
+
+You can modify maximum velocities by editing the teleop node parameters or creating a custom launch file with adjusted limits.
+
+### Multiple robots
+
+For controlling multiple robots, remap the cmd_vel topic:
+
+```bash
+ros2 run turtlebot3_teleop teleop_keyboard --ros-args --remap /cmd_vel:=/robot1/cmd_vel
+```
+
+### Joystick control
+
+While this guide focuses on keyboard control, TurtleBot3 also supports joystick/gamepad control through additional ROS2 packages.

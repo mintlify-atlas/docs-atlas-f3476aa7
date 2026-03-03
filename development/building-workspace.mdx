@@ -1,0 +1,184 @@
+---
+title: Building with colcon
+description: How to build ROS2 packages using the colcon build system
+---
+
+The TurtleBot3 workspace uses colcon as its build system. This guide covers building packages and using build aliases.
+
+## Quick build with aliases
+
+The environment includes pre-configured aliases for common build tasks:
+
+| Alias | Command | Description |
+|-------|---------|-------------|
+| `cb` | `cd /workspace/turtlebot3_ws && colcon build --symlink-install` | Build workspace |
+| `sb` | `source /workspace/turtlebot3_ws/install/setup.bash` | Source workspace |
+
+<Steps>
+  <Step title="Navigate to workspace">
+    ```bash
+    cd /workspace/turtlebot3_ws
+    ```
+  </Step>
+
+  <Step title="Build all packages">
+    ```bash
+    cb
+    ```
+    
+    Or use the full command:
+    
+    ```bash
+    colcon build --symlink-install
+    ```
+  </Step>
+
+  <Step title="Source the workspace">
+    After building, source the workspace to use the packages:
+    
+    ```bash
+    sb
+    ```
+    
+    Or use the full command:
+    
+    ```bash
+    source install/setup.bash
+    ```
+  </Step>
+</Steps>
+
+## Build options
+
+### Symlink install
+
+The `--symlink-install` flag creates symbolic links instead of copying files. This allows you to modify Python scripts and launch files without rebuilding:
+
+```bash
+colcon build --symlink-install
+```
+
+Note: C++ code changes still require a rebuild.
+
+### Build specific packages
+
+Build only one package:
+
+```bash
+colcon build --packages-select turtlebot3_gazebo
+```
+
+Build a package and its dependencies:
+
+```bash
+colcon build --packages-up-to turtlebot3_gazebo
+```
+
+### Verbose output
+
+Show detailed build output for debugging:
+
+```bash
+colcon build --event-handlers console_direct+
+```
+
+### Release build
+
+Build with optimizations enabled:
+
+```bash
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
+
+This is the default configuration used in `post-start.sh`.
+
+## Clean build
+
+When you need to rebuild everything from scratch:
+
+<Steps>
+  <Step title="Remove generated directories">
+    ```bash
+    cd /workspace/turtlebot3_ws
+    rm -rf build install log
+    ```
+  </Step>
+
+  <Step title="Rebuild workspace">
+    ```bash
+    colcon build --symlink-install
+    ```
+  </Step>
+
+  <Step title="Source the workspace">
+    ```bash
+    source install/setup.bash
+    ```
+  </Step>
+</Steps>
+
+## Automatic build on startup
+
+The container automatically builds the workspace when it starts via `post-start.sh`:
+
+```bash
+# From .devcontainer/post-start.sh
+colcon build --symlink-install --cmake-args -DCMAKE_BUILD_TYPE=Release
+```
+
+First-time builds take 2-3 minutes. Subsequent builds are faster when packages haven't changed.
+
+## Build verification
+
+Verify the build succeeded by listing installed packages:
+
+```bash
+ros2 pkg list | grep turtlebot3
+```
+
+Expected output includes:
+- `turtlebot3_cartographer`
+- `turtlebot3_description`
+- `turtlebot3_gazebo`
+- `turtlebot3_navigation2`
+- `turtlebot3_node`
+- `turtlebot3_teleop`
+
+And more TurtleBot3 packages.
+
+## Troubleshooting build issues
+
+If the build fails:
+
+<Steps>
+  <Step title="Check for error messages">
+    Review the build output for specific errors:
+    
+    ```bash
+    colcon build --symlink-install --event-handlers console_direct+
+    ```
+  </Step>
+
+  <Step title="Install missing dependencies">
+    ```bash
+    rosdep update
+    rosdep install --from-paths src --ignore-src -r -y
+    ```
+  </Step>
+
+  <Step title="Clean and rebuild">
+    ```bash
+    cd /workspace/turtlebot3_ws
+    rm -rf build install log
+    colcon build --symlink-install
+    ```
+  </Step>
+
+  <Step title="Check build logs">
+    Review detailed logs if issues persist:
+    
+    ```bash
+    cat /workspace/turtlebot3_ws/log/latest*/events.log
+    ```
+  </Step>
+</Steps>
