@@ -1,0 +1,150 @@
+{
+  "projectType": "infrastructure",
+  "projectName": "TurtleBot3 ROS2 Jazzy Dev Container",
+  "projectDescription": "ROS2 Jazzy development environment with TurtleBot3 Burger simulation in Gazebo Harmonic, packaged as a VS Code Dev Container for cross-platform robotics development.",
+  "theme": "aspen",
+  "primaryColor": "#1976d2",
+  "lightColor": "#42a5f5",
+  "darkColor": "#0d47a1",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "prerequisites",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/architecture",
+              "concepts/technology-stack",
+              "concepts/dev-containers",
+              "concepts/data-persistence"
+            ]
+          },
+          {
+            "group": "Usage",
+            "pages": [
+              "usage/quick-launch",
+              "usage/simulation-worlds",
+              "usage/teleoperation",
+              "usage/slam-mapping",
+              "usage/autonomous-navigation"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "configuration/container-resources",
+              "configuration/robot-models",
+              "configuration/environment-variables",
+              "configuration/vnc-settings"
+            ]
+          },
+          {
+            "group": "Development",
+            "pages": [
+              "development/workspace-structure",
+              "development/building-workspace",
+              "development/creating-packages",
+              "development/debugging",
+              "development/version-control"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Project Structure",
+            "pages": [
+              "reference/directory-layout",
+              "reference/configuration-files",
+              "reference/scripts"
+            ]
+          },
+          {
+            "group": "Scripts",
+            "pages": [
+              "reference/post-create",
+              "reference/post-start",
+              "reference/verify-setup"
+            ]
+          },
+          {
+            "group": "Commands & Aliases",
+            "pages": [
+              "reference/aliases",
+              "reference/ros2-commands",
+              "reference/colcon-commands"
+            ]
+          },
+          {
+            "group": "Troubleshooting",
+            "pages": [
+              "troubleshooting/docker-issues",
+              "troubleshooting/container-build",
+              "troubleshooting/port-network",
+              "troubleshooting/performance",
+              "troubleshooting/vnc-display",
+              "troubleshooting/gazebo-issues",
+              "troubleshooting/ros2-issues"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Resources",
+        "groups": [
+          {
+            "group": "Learning",
+            "pages": [
+              "resources/ros2-tutorials",
+              "resources/turtlebot3-manual",
+              "resources/gazebo-docs",
+              "resources/community"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "contributing/guidelines",
+              "contributing/development-setup"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "ROS2 Jazzy (Ubuntu 24.04 Noble)",
+    "Gazebo Harmonic simulator with GPU support",
+    "TurtleBot3 Burger robot packages",
+    "Navigation2 and SLAM (Cartographer)",
+    "noVNC Desktop for browser-based GUI access",
+    "Pre-configured VS Code development environment",
+    "Platform-agnostic (Windows, macOS, Linux)",
+    "Complete containerized development environment"
+  ],
+  "publicApiSurface": [
+    "tb3_empty - Launch empty simulation world",
+    "tb3_world - Launch TurtleBot3 world with obstacles",
+    "tb3_house - Launch house environment",
+    "tb3_teleop - Keyboard teleoperation control",
+    "tb3_slam - Start SLAM with Cartographer",
+    "tb3_nav - Start Navigation2 stack",
+    "cb - Build workspace with colcon",
+    "sb - Source workspace environment",
+    "post-create.sh - Initial container setup script",
+    "post-start.sh - Container start build script",
+    "verify-setup.sh - Setup verification script"
+  ]
+}
